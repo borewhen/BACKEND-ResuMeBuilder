@@ -1,7 +1,7 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, Text
+from sqlalchemy import Column, Integer, String, ForeignKey, Date, Text
 from sqlalchemy.orm import relationship
 from app.database import Base
-from datetime import datetime
+from date import date
 
 class User(Base):
     __tablename__ = "users"
@@ -13,7 +13,7 @@ class User(Base):
     last_name = Column(String, nullable=False)
     profile_picture_url = Column(String)
     summary = Column(Text)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(Date, default=date.utcnow)
 
     experiences = relationship("Experience", back_populates="user")
     job_applications = relationship("JobApplication", back_populates="user")
@@ -27,8 +27,8 @@ class Experience(Base):
     company_name = Column(String, nullable=False)
     job_title = Column(String, nullable=False)
     location = Column(String)
-    start_date = Column(DateTime)
-    end_date = Column(DateTime)
+    start_date = Column(date)
+    end_date = Column(date)
     description = Column(Text)
 
     user = relationship("User", back_populates="experiences")

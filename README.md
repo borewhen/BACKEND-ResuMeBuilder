@@ -16,3 +16,16 @@ backend/
 ├── .env                    # Environment variables for the project
 ├── requirements.txt        # Python dependencies
 ├── Dockerfile              # Configuration for Docker containerization
+
+
+How to run back-end
+- open command prompt on the designated directory
+- Open up environemnt : venv\Scripts\activate
+- install dependencies: pip install -r requirements.txt
+- set up enviornment variables to mysQl (.env file)
+- initialise database:
+alembic init alembic
+alembic revision --autogenerate -m "Initial migration"
+alembic upgrade head
+- run the app : uvicorn app.main:app --reload
+

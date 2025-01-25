@@ -1,3 +1,9 @@
-
-pip install fastapi uvicorn psycopg2 sqlalchemy pydantic bcrypt python-jose
-
+fastapi
+uvicorn
+psycopg2
+sqlalchemy
+pydantic
+bcrypt
+python-jose
+passlib 
+alembic

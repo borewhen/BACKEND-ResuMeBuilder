@@ -1,13 +1,13 @@
-## Backend Structure
+# Back-End Folder Structure
 
 ```plaintext
 app/
-├── routers/                # API route definition
+├── routers/                # API route definitions
 │   ├── __init__.py
 │   ├── auth.py
 │   └── user.py
-├── services/               # package for utilities / service function, holding business logic
-│   ├── __init__.py 
+├── services/               # Utilities and business logic
+│   ├── __init__.py
 │   └── user_service.py
 ├── schemas/                # Pydantic schemas for data validation
 │   ├── __init__.py
@@ -15,23 +15,55 @@ app/
 ├── models/                 # Database models for ORM
 │   ├── __init__.py
 │   └── user.py
-├── database.py             # Database configuration and connection setup
-└── utils/
-    ├── __init__.py
-    └── auth.py
-├── .env                    # Environment variables for the project
-├── .env.templat            # Env template
-├── Dockerfile              # Configuration for Docker containerization
+├── database.py 
+├── __init__.py
+├── main.py
+```
+
+# Back-End Setup Instructions
+
+Follow the steps below to set up and run the back-end application:
+
+---
+
+## **Prerequisites**
+
+- A virtual environment (`venv`) set up for the project
+- Ensure you have access to the `.env` variable, refer to env.template for what variables you need
+
+---
+
+## **Steps to Run the Back-End**
 
 
-How to run back-end
-- open command prompt on the designated directory
-- Open up environemnt : venv\Scripts\activate
-- install dependencies: pip install -r requirements.txt
-- set up enviornment variables to mysQl (.env file)
-- initialise database:
-alembic init alembic
-alembic revision --autogenerate -m "Initial migration"
+## Without Docker
+### 1. Activate the Virtual Environment
+Activate the virtual environment for the project:
+
+- Windows: 
+```bash
+venv\Scripts\activate
+```
+- Mac/Linux: 
+```bash
+source .venv/bin/activate
+```
+### 2. Install Dependencies
+Install all required dependencies from the requirements.txt file:
+
+```bash
+pip install -r requirements.txt
+```
+
+### 3. Migrations
+Apply the migration to the database:
+
+```bash
 alembic upgrade head
-- run the app : uvicorn app.main:app --reload
+```
 
+### 4. Run the Application
+Start the FastAPI application with Uvicorn:
+```bash
+uvicorn app.main:app --reload
+```

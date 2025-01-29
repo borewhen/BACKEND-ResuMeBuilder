@@ -91,14 +91,33 @@ Install all required dependencies from the requirements.txt file:
 pip install -r requirements.txt
 ```
 
-### 3. Migrations
+### 3. Create Database
+Open your local **pgAdmin** and create a new server with hostname ```localhost```, then fill up the username and password (if any).
+
+Inside the server, create a database named ```resume_db```.
+
+### 4. Fill the Environment Variables
+Copy the environment template
+```
+cp .env.template .env
+```
+Fill up the ```DATABASE_URL``` field with your user
+```
+DATABASE_URL="postgresql://<your_username>:<your_password>"@localhost:5432/resume_db
+```
+or (if no password is set)
+```
+DATABASE_URL="postgresql://<your_username>@localhost:5432/resume_db
+```
+
+### 5. Migrations
 Apply the migration to the database:
 
 ```bash
-alembic upgrade head
+python -m alembic upgrade head
 ```
 
-### 4. Run the Application
+### 6. Run the Application
 Start the FastAPI application with Uvicorn:
 ```bash
 uvicorn app.main:app --reload

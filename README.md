@@ -122,3 +122,20 @@ Start the FastAPI application with Uvicorn:
 ```bash
 uvicorn app.main:app --reload
 ```
+
+## Creating Python Virtual Environment (Venv)
+NOTE: This is only useful if you are NOT using docker environment.
+
+In this example we will use ```dip``` as the name to the virtual environment.
+
+``` bash
+python -m venv dip # or python3 -m venv dip
+```
+The python version of the venv will follow the head's version.
+
+Upon succesfull creation, you must activate the environment to use i
+```bash
+source dip/bin/activate
+```
+
+Doing this correctly will change your command prompt to include ```(dip)``` in front of each line.

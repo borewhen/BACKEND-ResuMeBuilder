@@ -1,8 +1,5 @@
-## Requirements
+**Python Library Uses**
 
-```plaintext
-
-pip install fastapi uvicorn psycopg2 sqlalchemy pydantic bcrypt python-jose
 
 fastapi-A modern, fast (high-performance) web framework for building APIs with Python.
 Uvicorn-Used as the server that listens to HTTP requests and routes them to your FastAPI application.

@@ -1,28 +1,42 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Response
 from sqlalchemy.orm import Session
-from app import models, schemas
+from app.models import User
+from app.schemas.user import UserCreate, UserLogin, UserOut
+from app.service.user_service import authenticate_user  # Import the auth function
 from app.database import get_db
-from app.utils import hash_password, verify_password
+from app.service import user_service
 from jose import jwt, JWTError
 
 router = APIRouter()
 
-@router.post("/register", response_model=schemas.UserOut)
-def register(user: schemas.UserCreate, db: Session = Depends(get_db)):
-    existing_user = db.query(models.User).filter(models.User.email == user.email).first()
+@router.post("/register", response_model=UserOut)
+def register(user: UserCreate, db: Session = Depends(get_db)):
+    existing_user = db.query(User).filter(User.email == user.email).first()
     if existing_user:
         raise HTTPException(status_code=400, detail="Email already registered")
-    hashed_password = hash_password(user.password)
-    new_user = models.User(**user.dict(), password=hashed_password)
+    hashed_password = user_service.hash_password(user.password)
+    user.password = hashed_password
+    new_user = User(**user.dict())
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
     return new_user
 
 @router.post("/login")
-def login(credentials: schemas.Login, db: Session = Depends(get_db)):
-    user = db.query(models.User).filter(models.User.email == credentials.email).first()
-    if not user or not verify_password(credentials.password, user.password):
+def login(response: Response, user_credentials: UserLogin, db: Session = Depends(get_db)):
+    user_data = authenticate_user(db, user_credentials.email, user_credentials.password)
+
+    if not user_data:
         raise HTTPException(status_code=401, detail="Invalid credentials")
-    # Return JWT token here
-    return {"access_token": "fake_token"}
+
+    # Set HTTP-only cookie for access token
+    response.set_cookie(
+        key="access_token",
+        value=user_data["access_token"],
+        httponly=True,
+        secure=True,  # Set to False if running locally without HTTPS
+        samesite="Strict",
+        max_age=60 * 60,  # 1 hour
+    )
+
+    return {"message": "Login successful", "user": user_data["user"]}

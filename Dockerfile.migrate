@@ -1,0 +1,21 @@
+FROM python:3.10.5
+
+WORKDIR /app
+
+RUN apt-get update && apt-get -y install \
+    libssl-dev \ 
+    libffi-dev \
+    libsasl2-dev \ 
+    libldap2-dev
+
+COPY requirements.txt .
+
+RUN pip install --upgrade pip==24.0
+
+RUN pip install -r requirements.txt
+
+COPY . .
+
+EXPOSE 8000
+
+ENTRYPOINT ["alembic"]

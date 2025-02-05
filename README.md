@@ -65,11 +65,18 @@ Use `host.docker.internal` as Host name/address
 Now create a new database in the server we created previously, and name it resume_db
 ![db](img/db.png)
 
-#### Migrating the database
-make the initiate migration for the DB with the following commands: 
+#### Migration
+create new migration file: 
 
-`$ docker compose run migration`
+`$ docker compose run migration revision -m "<your migration message here>"`
 
+upgrade version of migration:
+
+`$ docker compose run migration upgrade head`
+
+downgrade version of migration:
+
+`$ docker compose run migration downgrade -1`
 
 
 ## Without Docker

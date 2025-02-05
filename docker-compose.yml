@@ -33,8 +33,9 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.migrate
-    command: upgrade head
     depends_on:
       - postgres
     profiles:
       - migration
+    volumes:
+      - .:/app

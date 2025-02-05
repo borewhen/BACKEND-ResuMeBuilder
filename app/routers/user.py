@@ -1,7 +1,8 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Response
 from sqlalchemy.orm import Session
 from app.models import User
 from app.schemas.user import UserCreate, UserLogin, UserOut
+from app.service.user_service import authenticate_user  # Import the auth function
 from app.database import get_db
 from app.service import user_service
 from jose import jwt, JWTError
@@ -22,9 +23,20 @@ def register(user: UserCreate, db: Session = Depends(get_db)):
     return new_user
 
 @router.post("/login")
-def login(credentials: UserLogin, db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.email == credentials.email).first()
-    if not user or not user_service.verify_password(credentials.password, user.password):
+def login(response: Response, user_credentials: UserLogin, db: Session = Depends(get_db)):
+    user_data = authenticate_user(db, user_credentials.email, user_credentials.password)
+
+    if not user_data:
         raise HTTPException(status_code=401, detail="Invalid credentials")
-    # Return JWT token here
-    return {"access_token": "fake_token"}
+
+    # Set HTTP-only cookie for access token
+    response.set_cookie(
+        key="access_token",
+        value=user_data["access_token"],
+        httponly=True,
+        secure=True,  # Set to False if running locally without HTTPS
+        samesite="Strict",
+        max_age=60 * 60,  # 1 hour
+    )
+
+    return {"message": "Login successful", "user": user_data["user"]}

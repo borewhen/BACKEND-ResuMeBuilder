@@ -1,6 +1,7 @@
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
 from app.routers import user, job, video  # Import routers
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
 
@@ -8,6 +9,21 @@ app = FastAPI()
 app.include_router(user.router, prefix="/user", tags=["Users"])
 app.include_router(job.router, prefix="/job", tags=["Jobs"])
 app.include_router(video.router, prefix="/video", tags=["VideoUpload"])
+
+# Define allowed origins
+origins = [
+    "http://localhost:3000", # development environment
+    # Add the production URL here
+]
+
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Global exception handler for unexpected exceptions
 @app.exception_handler(Exception)

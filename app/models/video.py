@@ -10,7 +10,7 @@ class Video(Base):
     file_path = Column(String)  # The location of the video file
     duration = Column(Integer)  # Video duration in seconds
     format = Column(String)  # Video format (e.g., mp4, avi, etc.)
-    uploaded_by = Column(Integer, ForeignKey("users.id"))  # Assuming you have a users table
+    uploaded_by = Column(Integer, ForeignKey("users.user_id"))  # Assuming you have a users table
     
     # Relationship to the User table (if you have a User model)
     user = relationship("User", back_populates="videos")

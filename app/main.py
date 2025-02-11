@@ -2,7 +2,6 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
 from app.routers import user, job, video  # Import routers
 from fastapi.middleware.cors import CORSMiddleware
-
 app = FastAPI()
 
 # Include the routers for user job and video routes

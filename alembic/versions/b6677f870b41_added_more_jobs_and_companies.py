@@ -13,14 +13,12 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision: str = 'b6677f870b41'
-down_revision: Union[str, None] = '30529347fd00'
+down_revision: Union[str, None] = '79127f7cb87f'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    op.execute("DELETE FROM public.jobs")    
-    op.execute("DELETE FROM public.companies")
     op.execute("""
 INSERT INTO public.companies (name, industry, address, website_url, logo_url, description)
 VALUES 

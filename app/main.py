@@ -5,9 +5,25 @@ from app.routers import user, job  # Import routers
 
 app = FastAPI()
 
-# Include the routers for user and job routes
+# Include the routers for user job and video routes
 app.include_router(user.router, prefix="/user", tags=["Users"])
 app.include_router(job.router, prefix="/job", tags=["Jobs"])
+app.include_router(video.router, prefix="/video", tags=["VideoUpload"])
+
+# Define allowed origins
+origins = [
+    "http://localhost:3000", # development environment
+    # Add the production URL here
+]
+
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Define allowed origins
 origins = [

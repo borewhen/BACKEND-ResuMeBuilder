@@ -19,3 +19,4 @@ class User(Base):
 
     experiences = relationship("Experience", back_populates="user")
     job_applications = relationship("JobApplication", back_populates="user")
+    videos = relationship("Video", back_populates="user")

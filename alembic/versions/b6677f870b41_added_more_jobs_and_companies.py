@@ -1,7 +1,7 @@
 ﻿"""Added more jobs and companies
 
 Revision ID: b6677f870b41
-Revises: 30529347fd00
+Revises: 79127f7cb87f
 Create Date: 2025-02-12 07:17:23.667669
 
 """
@@ -19,6 +19,8 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
+    op.execute("DELETE FROM public.jobs")
+    op.execute("DELETE FROM public.companies")
     op.execute("""
 INSERT INTO public.companies (name, industry, address, website_url, logo_url, description)
 VALUES 

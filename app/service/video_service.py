@@ -8,7 +8,7 @@ from deepface import DeepFace
 import warnings
 import tensorflow as tf
 from pydub import AudioSegment
-from app.models.video import Video  # Adjust import if necessary
+from app.models.video import Video
 import dotenv
 from tqdm import tqdm
 
@@ -48,7 +48,7 @@ def transcribe_audio(audio_path: str):
             transcript = openai.Audio.transcribe(
                 model="whisper-1", file=audio_file
             )
-        return transcript['text']
+        return transcript.get('text', '')
     except Exception as e:
         raise Exception(f"Error transcribing audio: {str(e)}")
 
@@ -65,7 +65,7 @@ def analyze_text_with_gpt(text: str):
         )
         return response.choices[0].message.content
     except Exception as e:
-        raise Exception(f"Error analyzing text with GPT-4: {str(e)}")
+        return f"Error analyzing text with GPT-4: {str(e)}"
 
 # Function to analyze body pose using MediaPipe
 def analyze_body_pose(image_path):
@@ -170,21 +170,33 @@ def analyze_body_language(video_bytes: bytes):
 
 # Function to process the video (transcription, body language, feedback)
 def process_video(video_bytes: bytes):
+    audio_path = None
     try:
+        # Extract audio
         audio_path = extract_audio_from_video(video_bytes)
-        transcript = transcribe_audio(audio_path)
-        text_analysis = analyze_text_with_gpt(transcript)
-        body_language_feedback = analyze_body_language(video_bytes)
         
-        result = {
-            "transcript": transcript,
-            "text_analysis": text_analysis,
-            "body_language_feedback": body_language_feedback
+        # Transcribe audio to text
+        transcript = transcribe_audio(audio_path) or ""  # Fallback to empty string if None
+        print(f"Transcript: {transcript}")
+        
+        # Analyze body language
+        body_language_feedback = analyze_body_language(video_bytes) or ""  # Fallback to empty string if None
+        print(f"Body Language Feedback: {body_language_feedback}")
+        
+        # Prepare the response data
+        return {
+            "success": True,
+            "message": "Video processed successfully.",
+            "transcript": transcript,  # Ensure transcript is a string
+            "analysis": body_language_feedback  # Ensure analysis is a string
         }
-        
-        os.remove(audio_path)
-        return result
+
     except Exception as e:
-        if os.path.exists(audio_path):
+        if audio_path and os.path.exists(audio_path):
             os.remove(audio_path)
-        print(f"Error processing video: {str(e)}")
+        return {
+            "success": False,
+            "message": f"Error processing video: {str(e)}",
+            "transcript": "",  # Default to empty string if error occurs
+            "analysis": ""  # Default to empty string if error occurs
+        }

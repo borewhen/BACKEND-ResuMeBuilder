@@ -7,7 +7,8 @@ RUN apt-get update && apt-get -y install \
     libffi-dev \
     libsasl2-dev \ 
     libldap2-dev \
-    libgl1-mesa-glx
+    libgl1-mesa-glx \
+    ffmpeg
 
 
 COPY requirements.txt .

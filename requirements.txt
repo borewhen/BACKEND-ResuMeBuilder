@@ -52,4 +52,5 @@ tqdm
 opencv-python
 mediapipe
 tf-keras
+sse-starlette
 

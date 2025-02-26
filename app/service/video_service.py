@@ -8,9 +8,13 @@ from deepface import DeepFace
 import warnings
 import tensorflow as tf
 from pydub import AudioSegment
-from app.models.video import Video
 import dotenv
 from tqdm import tqdm
+import asyncio
+import logging
+import tempfile
+import time
+import random
 
 dotenv.load_dotenv()
 openai.api_key = os.getenv("OPENAI_API_KEY")
@@ -24,24 +28,81 @@ mp_pose = mp.solutions.pose
 mp_face_mesh = mp.solutions.face_mesh
 mp_holistic = mp.solutions.holistic
 
-# Function to extract audio from video
+
+def retry_with_backoff(func, *args, **kwargs):
+    retries = 5
+    delay = 2  # initial delay in seconds
+    for _ in range(retries):
+        try:
+            return func(*args, **kwargs)
+        except openai.error.RateLimitError:
+            # Handle rate limit error gracefully
+            logging.warning("Rate limit reached, retrying after wait...")
+            time.sleep(delay)
+            delay *= random.uniform(1.1, 1.5)  # Increase delay with each retry
+        except openai.error.InvalidRequestError as e:
+            # Handle token limit exceeded errors or other invalid request errors
+            if 'context length' in str(e):
+                logging.warning("Token limit exceeded, reducing the length of messages and retrying.")
+                # Optionally, you could attempt to split the input into smaller chunks here.
+            else:
+                logging.error(f"Invalid request error: {e}")
+            time.sleep(delay)
+            delay *= random.uniform(1.1, 1.5)  # Increase delay with each retry
+    raise Exception("Rate limit exceeded after retries or invalid request error occurred")
+
+
 def extract_audio_from_video(video_bytes: bytes):
-    audio_path = f"output.mp3"
     try:
+        logging.info(f"Received video bytes of size: {len(video_bytes)} bytes")
+
+        if len(video_bytes) == 0:
+            raise ValueError("Received video bytes are empty.")
+
+        # Create a temporary video file to store video bytes
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.mp4') as temp_video_file:
+            temp_video_file.write(video_bytes)
+            temp_video_path = temp_video_file.name
+            logging.info(f"Temporary video file created: {temp_video_path}")
+        
+        time.sleep(3)  # Wait for the system to ensure the file is fully written
+        
+        if not os.path.exists(temp_video_path) or os.path.getsize(temp_video_path) == 0:
+            raise ValueError(f"Error: Video file is not valid or empty: {temp_video_path}")
+
+        # Delete the existing output.mp3 if it exists
+        if os.path.exists("output.mp3"):
+            os.remove("output.mp3")
+            logging.info("Existing output.mp3 deleted.")
+
+        # Use ffmpeg to extract the audio
+        audio_path = "output.mp3"
         process = (
             ffmpeg
-            .input("pipe:0")
+            .input(temp_video_path)
             .output(audio_path, format="mp3", acodec="libmp3lame", ar=44100, ac=2, ab="192k")
-            .run_async(pipe_stdin=True, pipe_stdout=True, pipe_stderr=True, quiet=True)
+            .run_async(pipe_stdin=True, pipe_stdout=True, pipe_stderr=True, quiet=False)
         )
-        process.stdin.write(video_bytes)
-        process.stdin.close()
-        process.wait()
-        return audio_path
+        
+        process.wait()  # Wait for the process to complete
+        
+        stderr = process.stderr.read()
+        if stderr:
+            logging.error(f"FFmpeg stderr: {stderr.decode()}")
+        
+        os.remove(temp_video_path)  # Remove the temporary video file
+        
+        if os.path.exists(audio_path):
+            logging.info(f"Audio extracted successfully: {audio_path}")
+            return audio_path
+        else:
+            raise Exception("Audio extraction failed. Output file not created.")
+    
     except Exception as e:
-        raise Exception(f"Error extracting audio: {str(e)}")
+        logging.error(f"Error extracting audio: {str(e)}")
+        raise
 
-# Function to transcribe audio
+
 def transcribe_audio(audio_path: str):
     try:
         with open(audio_path, 'rb') as audio_file:
@@ -50,67 +111,92 @@ def transcribe_audio(audio_path: str):
             )
         return transcript.get('text', '')
     except Exception as e:
-        raise Exception(f"Error transcribing audio: {str(e)}")
+        logging.error(f"Error transcribing audio: {str(e)}")
+        raise
 
-# Function to analyze text (grammar, fluency, coherence) using GPT
+
 def analyze_text_with_gpt(text: str):
     prompt = f"The following text is a mock interview. Analyze it for grammar, fluency, and coherence. Provide feedback in bullet points:\n\n{text}"
     try:
-        response = openai.ChatCompletion.create(
-            model="gpt-4",
-            messages=[{"role": "system", "content": "You are an AI that helps improve interview content."},
-                      {"role": "user", "content": prompt}],
-            max_tokens=500,
-            temperature=0.7
-        )
-        return response.choices[0].message.content
+        response = retry_with_backoff(openai.ChatCompletion.create,
+                                      model="gpt-4",
+                                      messages=[{"role": "system", "content": "You are an AI that helps improve interview content."},
+                                                {"role": "user", "content": prompt}],
+                                      max_tokens=500,
+                                      temperature=0.7)
+        return response.choices[0].message['content']
+    except openai.error.RateLimitError:
+        logging.warning("Rate limit exceeded during GPT analysis. Please try again later.")
+        return "Error: Rate limit exceeded. Please try again later."
+    except openai.error.InvalidRequestError as e:
+        logging.warning("Token limit exceeded or invalid request during GPT analysis.")
+        return "Error: Message too long. Please try to shorten your input and try again."
     except Exception as e:
-        return f"Error analyzing text with GPT-4: {str(e)}"
+        logging.error(f"Error analyzing text with GPT-4: {str(e)}")
+        return f"Error: {str(e)}"
 
-# Function to analyze body pose using MediaPipe
-def analyze_body_pose(image_path):
+
+def analyze_body_pose(image_bytes):
     try:
-        image = cv2.imread(image_path)
+        nparr = np.frombuffer(image_bytes, np.uint8)  # Convert bytes to numpy array
+        image = cv2.imdecode(nparr, cv2.IMREAD_COLOR)  # Decode to image
+        
+        if image is None:
+            raise ValueError("Could not decode image.")
+        
         with mp_pose.Pose(min_detection_confidence=0.5, min_tracking_confidence=0.5) as pose:
             results = pose.process(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
             if results.pose_landmarks:
                 body_parts = [f"Part {i}: {part}" for i, part in enumerate(results.pose_landmarks.landmark)]
                 return "\n".join(body_parts)
-            else:
-                return "No body detected"
+            return "No body detected"
     except Exception as e:
+        logging.error(f"Error analyzing body pose: {str(e)}")
         return f"Error analyzing body pose: {str(e)}"
 
-# Function to analyze emotion using DeepFace
-def analyze_emotion(image_path):
+
+def analyze_emotion(image_bytes):
     try:
-        result = DeepFace.analyze(image_path, actions=['emotion'])
+        nparr = np.frombuffer(image_bytes, np.uint8)  # Convert bytes to numpy array
+        image = cv2.imdecode(nparr, cv2.IMREAD_COLOR)  # Decode to image
+        
+        if image is None:
+            raise ValueError("Could not decode image.")
+        
+        result = DeepFace.analyze(image, actions=['emotion'])
         dominant_emotion = result[0]['dominant_emotion']
         return f"Dominant Emotion: {dominant_emotion}"
     except Exception as e:
+        logging.error(f"Error analyzing emotion: {str(e)}")
         return f"Error analyzing emotion: {str(e)}"
 
-# Function to generate feedback for the analysis in a batch
+
 def get_summary_feedback_batch(body_analyses, emotion_analyses):
     try:
         feedback_input = "Body Pose Analysis:\n" + "\n".join(body_analyses) + "\n\nEmotion Analysis:\n" + "\n".join(emotion_analyses)
 
-        response = openai.ChatCompletion.create(
-            model="gpt-4",
-            messages=[{
-                "role": "system", "content": "You are an interview assistant that provides feedback on public speaking, including body language, facial expressions, and emotions."
-            }, {
-                "role": "user", "content": f"Provide a summary of feedback based on the following analyses in point form, suggest things to improve on:\n{feedback_input}"
-            }],
-            max_tokens=500,
-            temperature=0.7
-        )
+        response = retry_with_backoff(openai.ChatCompletion.create,
+                                      model="gpt-4",
+                                      messages=[{
+                                          "role": "system", "content": "You are an interview assistant that provides feedback on public speaking, including body language, facial expressions, and emotions."
+                                      }, {
+                                          "role": "user", "content": f"Provide a summary of feedback based on the following analyses in point form, suggest things to improve on:\n{feedback_input}"
+                                      }],
+                                      max_tokens=500,
+                                      temperature=0.7)
 
         return response.choices[0].message["content"]
+    except openai.error.RateLimitError:
+        logging.warning("Rate limit exceeded during feedback generation. Please try again later.")
+        return "Error: Rate limit exceeded. Please try again later."
+    except openai.error.InvalidRequestError as e:
+        logging.warning("Token limit exceeded or invalid request during feedback generation.")
+        return "Error: Message too long. Please try to shorten your input and try again."
     except Exception as e:
+        logging.error(f"Error generating feedback: {str(e)}")
         return f"Error generating feedback: {str(e)}"
 
-# Function to analyze body language for all frames
+
 def analyze_body_language(video_bytes: bytes):
     try:
         video_path = "temp_video.mp4"
@@ -151,7 +237,7 @@ def analyze_body_language(video_bytes: bytes):
             batch_frames = extracted_frames[i:i+batch_size]
             
             body_analyses = []
-            emotion_analyses = []
+            emotion_analyses = []            
 
             for frame in batch_frames:
                 body_analysis = analyze_body_pose(frame)
@@ -166,37 +252,48 @@ def analyze_body_language(video_bytes: bytes):
         final_summary = "\n".join(batch_results)
         return final_summary
     except Exception as e:
-        raise Exception(f"Error analyzing body language: {str(e)}")
+        logging.error(f"Error analyzing body language: {str(e)}")
+        raise
 
-# Function to process the video (transcription, body language, feedback)
-def process_video(video_bytes: bytes):
+
+def process_video(video_bytes: bytes, feedback_queue: list):
     audio_path = None
     try:
+        logging.info("Started processing video...")
+
         # Extract audio
-        audio_path = extract_audio_from_video(video_bytes)
-        
-        # Transcribe audio to text
-        transcript = transcribe_audio(audio_path) or ""  # Fallback to empty string if None
-        print(f"Transcript: {transcript}")
-        
+        try:
+            audio_path = extract_audio_from_video(video_bytes)
+            logging.info(f"Audio extracted: {audio_path}")
+            feedback_queue.append(f"Audio extracted successfully: {audio_path}")
+        except Exception as e:
+            logging.error(f"Error extracting audio: {str(e)}")
+            feedback_queue.append(f"Error extracting audio: {str(e)}")
+            return {"success": False, "message": f"Error extracting audio: {str(e)}"}
+
+        # Transcribe audio
+        try:
+            transcript = transcribe_audio(audio_path)
+            logging.info(f"Transcription complete: {transcript}")
+            feedback_queue.append(f"Transcription complete: {transcript}")
+        except Exception as e:
+            logging.error(f"Error transcribing audio: {str(e)}")
+            feedback_queue.append(f"Error transcribing audio: {str(e)}")
+            return {"success": False, "message": f"Error transcribing audio: {str(e)}"}
+
         # Analyze body language
-        body_language_feedback = analyze_body_language(video_bytes) or ""  # Fallback to empty string if None
-        print(f"Body Language Feedback: {body_language_feedback}")
-        
-        # Prepare the response data
-        return {
-            "success": True,
-            "message": "Video processed successfully.",
-            "transcript": transcript,  # Ensure transcript is a string
-            "analysis": body_language_feedback  # Ensure analysis is a string
-        }
+        try:
+            body_language_feedback = analyze_body_language(video_bytes)
+            logging.info(f"Body language feedback: {body_language_feedback}")
+            feedback_queue.append(f"Body language feedback: {body_language_feedback}")
+        except Exception as e:
+            logging.error(f"Error analyzing body language: {str(e)}")
+            feedback_queue.append(f"Error analyzing body language: {str(e)}")
+            return {"success": False, "message": f"Error analyzing body language: {str(e)}"}
+
+        return {"success": True, "feedback": feedback_queue}
 
     except Exception as e:
-        if audio_path and os.path.exists(audio_path):
-            os.remove(audio_path)
-        return {
-            "success": False,
-            "message": f"Error processing video: {str(e)}",
-            "transcript": "",  # Default to empty string if error occurs
-            "analysis": ""  # Default to empty string if error occurs
-        }
+        logging.error(f"An error occurred during video processing: {str(e)}")
+        feedback_queue.append(f"An error occurred: {str(e)}")
+        return {"success": False, "message": f"An error occurred: {str(e)}"}

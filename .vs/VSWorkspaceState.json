@@ -2,8 +2,12 @@
   "ExpandedNodes": [
     "",
     "\\alembic",
-    "\\alembic\\versions"
+    "\\alembic\\versions",
+    "\\app",
+    "\\app\\models",
+    "\\app\\routers",
+    "\\app\\service"
   ],
-  "SelectedNode": "\\alembic\\versions\\30529347fd00_add_jobs.py",
+  "SelectedNode": "\\app\\service\\transcript_extraction_service.py",
   "PreviewInSolutionExplorer": false
 }

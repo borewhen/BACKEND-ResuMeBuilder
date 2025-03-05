@@ -16,3 +16,5 @@ class User(Base):
     summary = Column(Text)
     role = Column(String, nullable=False)  # Possible values: 'employer', 'employee', 'admin'
     created_at = Column(Date, default=date.today)
+
+    mock_interviews = relationship("MockInterview", back_populates="user", cascade="all, delete-orphan")

@@ -16,8 +16,3 @@ class User(Base):
     summary = Column(Text)
     role = Column(String, nullable=False)  # Possible values: 'employer', 'employee', 'admin'
     created_at = Column(Date, default=date.today)
-
-    experiences = relationship("Experience", back_populates="user")
-    job_applications = relationship("JobApplication", back_populates="user")
-    skills = relationship("Skill", back_populates="user")
-    interview_questions = relationship("InterviewQuestion", back_populates="user")

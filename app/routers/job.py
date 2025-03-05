@@ -1,21 +1,46 @@
-from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
-from app.models import Job
-from app.schemas.job import JobOut, JobCreate
-from app.database import get_db
+from fastapi import APIRouter, Depends, HTTPException, Query, Path
 from app.models import User
 from app.service.user_service import jwt_required
+from app.service.job_service import scrape_jobs_list, scrape_job_detail
+from typing import List, Dict
+from typing import Annotated
+from fastapi.exceptions import ResponseValidationError
 
 router = APIRouter()
 
-@router.post("/create", response_model=JobOut)
-def create_job(job: JobCreate, db: Session = Depends(get_db), user: User = Depends(jwt_required)):
-    new_job = Job(**job.dict())
-    db.add(new_job)
-    db.commit()
-    db.refresh(new_job)
-    return new_job
+@router.get("/")
+def list_jobs(
+    field: Annotated[str, Query(description="Filter jobs by field (e.g., Software Engineer)")] = None,
+    page: Annotated[int, Query(description="Page number for pagination")] = 1,
+):
+    """
+    Retrieves a list of job postings based on the provided field filter.
+    - field: Filter jobs by specific field (company name or job name).
+    - page: Page number for paginated results.
+    - user: Requires authentication (JWT token).
+    """
+    try:
+        return scrape_jobs_list(field, page)
+    except Exception:
+        raise HTTPException(status_code=500, detail="Internal server error")
 
-@router.get("/list")
-def list_jobs(db: Session = Depends(get_db), user: User = Depends(jwt_required)):
-    return db.query(Job).all()
+
+@router.get("/{job_id}")
+def get_job_detail(
+    job_id: Annotated[int, Path(title="The ID of the item to get")], 
+):
+    """
+    Retrieves details of a specific job using job_id.
+    - job_id: The unique identifier for the job.
+    - user: Requires authentication (JWT token).
+    """
+    if job_id <= 0:
+        raise HTTPException(status_code=400, detail="Invalid job ID")
+
+    try:
+        job = scrape_job_detail(job_id)
+        if not job:
+            raise HTTPException(status_code=404, detail="Job not found")
+        return job
+    except Exception:
+        raise HTTPException(status_code=500, detail="Internal server error")

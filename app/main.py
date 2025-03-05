@@ -3,6 +3,7 @@ from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from app.routers import user, job,resume_extraction  # Import routers
 
+
 app = FastAPI(debug=True)
 
 # Include the routers for user and job routes

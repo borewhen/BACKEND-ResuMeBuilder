@@ -1,11 +1,12 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, UploadFile
 import requests
 import os
 from app.models.mock_interview import MockInterview
 import openai
+import tempfile
 
 LINKEDIN_SCRAPER_API_KEY=os.getenv("LINKEDIN_SCRAPER_API_KEY", "dummy_key")
-
+OPENAI_API_KEY=os.getenv("OPENAI_API_KEY", "dummy_key")
 
 def parse_skills_from_job(db, job_id):
     """
@@ -107,3 +108,28 @@ def create_mock_interview(db, job_id: int, user_id: int):
     db.add(new_mock_interview)
     db.flush()
     return False
+
+async def get_transcript(file: UploadFile):
+    """
+    Creates a transcript from an audio file.
+    file (UploadFile): The audio file to transcribe.
+    """
+    try:
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.webm') as temp_audio:
+            temp_audio.write(await file.read())
+            temp_audio_path = temp_audio.name
+        
+        wav_audio_path = temp_audio_path.replace('.webm', '.wav')
+        os.system(f"ffmpeg -i {temp_audio_path} -ar 16000 -ac 1 -c:a pcm_s16le {wav_audio_path}")
+    
+        with open(wav_audio_path, "rb") as audio_file:
+            transcipt = openai.Audio.transcribe("whisper-1", audio_file)
+            
+        os.remove(temp_audio_path)
+        os.remove(wav_audio_path)
+        
+        return {"transcript": transcipt["text"]}
+    except Exception as e:
+        return {"error": str(e)}
+    
+    

@@ -37,7 +37,7 @@ def get_job_detail(
         raise HTTPException(status_code=400, detail="Invalid job ID")
 
     try:
-        job = scrape_job_detail(job_id)
+        job = scrape_job_detail(job_id)[0]
         if not job:
             raise HTTPException(status_code=404, detail="Job not found")
         return job

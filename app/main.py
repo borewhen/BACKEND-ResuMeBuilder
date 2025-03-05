@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Request, Depends
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from app.routers import user, job,resume_extraction  # Import routers
@@ -9,7 +9,6 @@ app = FastAPI(debug=True)
 app.include_router(user.router, prefix="/user", tags=["Users"])
 app.include_router(job.router, prefix="/job", tags=["Jobs"])
 app.include_router(resume_extraction.router, prefix="/resume", tags=["resume_extraction"])
-
 
 # Define allowed origins
 origins = [

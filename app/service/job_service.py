@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException
 import requests
 import os
-from app.models.skills import Skill
+from app.models.mock_interview import MockInterview
 import openai
 import re
 
@@ -61,52 +61,3 @@ def scrape_job_detail(job_id):
         return job_detail
     except Exception as e:
         raise HTTPException(status_code=500)
-
-
-def get_job_skills_required(db, job_id):
-    """
-    gets assosciated skills from the job
-    job_id (int): this is unique identifier for job
-    """
-    skills = db.query(Skill).filter(job_id == job_id).all()
-    if not skills: 
-        return None
-    return skills.__repr__()
-
-
-def parse_skills_from_job(db, job_id):
-    """
-    parse job description and post this to DB
-    job_description (str)
-    """
-    try:
-        # check if job exist or not in db
-        skills = db.query(Skill).filter(job_id == job_id).all()
-        if not skills: 
-            # fetch from scraping API 
-            response = response = requests.get(
-                f"https://api.scrapingdog.com/linkedinjobs",
-                params={"api_key": LINKEDIN_SCRAPER_API_KEY, "job_id": {job_id}},
-            )
-            if response.status_code != 200:
-                raise HTTPException(status_code=500, detail=f"Error fetching jobs: {response.text}")
-
-            job_detail = response.json()
-
-            # extract skills from job_desc
-            completion = openai.ChatCompletion.create(
-                model="gpt-4o",
-                messages=[
-                    {
-                        "role": "user",
-                        "content": f"""
-                        Format the following job description. What are the technical skills and group them into related categories.
-                        """
-                    }
-                ]
-            )
-        
-        return skills.__repr__()
-    except Exception:
-        raise HTTPException(status_code=500)
-    

@@ -18,8 +18,10 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
+
 def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
+
 
 def authenticate_user(db: Session, email: str, password: str) -> Optional[dict]:
     user = db.query(User).filter(User.email == email).first()
@@ -40,8 +42,10 @@ def authenticate_user(db: Session, email: str, password: str) -> Optional[dict]:
         }
     }
 
+
 def hash_password(password):
     return pwd_context.hash(password)
+
 
 def jwt_required(request: Request, db: Session = Depends(get_db)):
     """Extracts and verifies the current user from JWT token"""

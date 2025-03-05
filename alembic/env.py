@@ -6,8 +6,7 @@ from dotenv import load_dotenv
 import os
 from app.database import Base
 
-from app.models.user import User
-from app.models.skills import Skill
+from app.models import User, MockInterview, Category, Subcategory, Question
 
 from alembic import context
 

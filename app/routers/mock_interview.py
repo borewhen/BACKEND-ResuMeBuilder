@@ -1,21 +1,27 @@
-from fastapi import APIRouter, Depends, HTTPException, Query, Path
-import os
+from fastapi import APIRouter, Depends, HTTPException, Path
+from sqlalchemy.orm import Session
+from typing import Annotated
+from app.database import get_db
 from app.models import User
 from app.service.user_service import jwt_required
-from sqlalchemy.orm import Session
-from app.service.job_service import get_job_skills_required
-from app.database import get_db
-from typing import Annotated
+from app.service.mock_interview_service import create_mock_interview, parse_skills_from_job
 
 router = APIRouter()
 
-OPEN_AI_API_KEY = os.getenv("OPEN_API_KEY", "")
-
-@router.get("/{job_id}")
-def generate_interview_topics(job_id: Annotated[int, Path(title="The ID of the item to get")], db: Session = Depends(get_db)):
+@router.post("/{job_id}")
+def generate_interview_topics(
+    job_id: Annotated[int, Path(title="The ID of the job")], 
+    db: Session = Depends(get_db), 
+    user: User = Depends(jwt_required)  # Fixed incorrect annotation
+):
     try:
-        skills = get_job_skills_required(job_id)
+        is_mock_interview_exist = create_mock_interview(db, job_id, user.user_id)
+        if not is_mock_interview_exist:
+            parse_skills_from_job(db, job_id)
+        db.commit()
+        return {"message": "success"}, 200
 
-        return "success", 200
-    except Exception:
-        raise HTTPException(status_code=500)
+    except Exception as e:
+        print(str(e))
+        db.rollback()  # Rollback in case of failure
+        raise HTTPException(status_code=500, detail=str(e))

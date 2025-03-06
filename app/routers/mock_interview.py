@@ -23,15 +23,14 @@ async def get_audio_transcript(
 def generate_interview_topics(
     job_id: Annotated[int, Path(title="The ID of the job")], 
     db: Session = Depends(get_db), 
-    user: User = Depends(jwt_required)  # Fixed incorrect annotation
+    user: User = Depends(jwt_required)
 ):
     try:
-        is_mock_interview_exist = create_mock_interview(db, job_id, user.user_id)
-        if not is_mock_interview_exist:
-            parse_skills_from_job(db, job_id)
+        mock_interview, is_exist = create_mock_interview(db, job_id, user.user_id)
+        if not is_exist:
+            mock_interview = parse_skills_from_job(db, job_id, mock_interview.mock_interview_id)
         db.commit()
-        return {"message": "success"}, 200
-
+        return mock_interview
     except Exception as e:
         print(str(e))
         db.rollback()  # Rollback in case of failure

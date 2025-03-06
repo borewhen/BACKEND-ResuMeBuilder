@@ -61,3 +61,21 @@ def scrape_job_detail(job_id):
         return job_detail
     except Exception as e:
         raise HTTPException(status_code=500)
+
+
+def get_company_name_and_job_position(job_id):
+    """
+    get company name and job position
+    """
+    response = response = requests.get(
+        f"https://api.scrapingdog.com/linkedinjobs",
+        params={"api_key": LINKEDIN_SCRAPER_API_KEY, "job_id": {job_id}},
+    )
+    if response.status_code != 200:
+        raise HTTPException(status_code=500, detail=f"Error fetching jobs: {response.text}")
+    
+    job_data = response.json()[0]
+    return {
+        "company_name": job_data.get("company_name", "Unknown"),
+        "job_position": job_data.get("job_position", "Unknown")
+    }

@@ -10,4 +10,4 @@ class Answer(Base):
     recommended_answer = Column(String, nullable=False)
     
     question_id = Column(Integer, ForeignKey("question.question_id"), nullable=False)
-    question = relationship("Question", back_populates="question")
+    question = relationship("Question", back_populates="answer")

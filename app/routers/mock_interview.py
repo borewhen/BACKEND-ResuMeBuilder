@@ -4,7 +4,7 @@ from typing import Annotated
 from app.database import get_db
 from app.models import User
 from app.service.user_service import jwt_required
-from app.service.mock_interview_service import create_mock_interview, parse_skills_from_job, get_transcript, get_mock_interview_topics
+from app.service.mock_interview_service import create_mock_interview, parse_skills_from_job, get_mock_interview_topics
 
 router = APIRouter()
 

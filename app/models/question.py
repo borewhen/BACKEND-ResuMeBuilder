@@ -10,3 +10,4 @@ class Question(Base):
     subcategory_id = Column(Integer, ForeignKey("subcategory.subcategory_id"), nullable=False)
 
     subcategory = relationship("Subcategory", back_populates="questions")
+    answer = relationship("Answer", uselist=False, back_populates="question", cascade="all, delete-orphan")

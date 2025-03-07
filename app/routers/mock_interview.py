@@ -8,17 +8,6 @@ from app.service.mock_interview_service import create_mock_interview, parse_skil
 
 router = APIRouter()
 
-@router.post("/transcript")
-async def get_audio_transcript(
-    file: UploadFile = File(...),
-):
-    try:
-        # Process the audio file and return the transcript
-        transcript = await get_transcript(file)
-        return {"transcript": transcript}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
 @router.post("/{job_id}")
 def generate_interview_topics(
     job_id: Annotated[int, Path(title="The ID of the job")], 
@@ -36,4 +25,3 @@ def generate_interview_topics(
         print(str(e))
         db.rollback()  # Rollback in case of failure
         raise HTTPException(status_code=500, detail=str(e))
-

@@ -52,7 +52,6 @@ def parse_skills_from_job(db, job_id, mock_interview_id):
         # get sub categories skill for each category in job_desc
         categories = completion["choices"][0]["message"]["content"].strip().split(",")
         category_map = insert_categories(db, mock_interview_id, categories)
-        res = {}
 
         sub = []
         for category in categories:
@@ -76,12 +75,10 @@ def parse_skills_from_job(db, job_id, mock_interview_id):
                 ]
             )
             subcategories = completion["choices"][0]["message"]["content"].strip().split(",")
-            res[category] = subcategories
             for subcategory in subcategories:
                 sub.append(Subcategory(category_id=category_map[category], subcategory_name=subcategory))
         
         insert_subcategories(db, sub)
-        return res
     except Exception as e:
         print(str(e))
         raise HTTPException(status_code=500)
@@ -102,9 +99,17 @@ def create_mock_interview(db, job_id: int, user_id: int):
     )
     
     if existing_mock_interview:
-        res = {}
+        res = []
         for category in existing_mock_interview.categories:
-            res[category.category_name] = [sub.subcategory_name for sub in category.subcategories]
+            res.append({
+                "category_id": category.category_id,
+                "category_name": category.category_name,
+                "subcategories": [{
+                    "subcategory_id": sub.subcategory_id,
+                    "status": sub.status,
+                    "subcategory_name": sub.subcategory_name
+                } for sub in category.subcategories]
+            })
         return res, True
 
     job_detail = get_company_name_and_job_position(job_id)
@@ -148,7 +153,6 @@ def insert_categories(db, mock_interview_id, categories):
     category_objects = [Category(mock_interview_id=mock_interview_id, category_name=name) for name in categories]
     
     db.bulk_save_objects(category_objects, return_defaults = True)
-    db.add_all(category_objects)
     db.flush()
 
     category_map = {category.category_name: category.category_id for category in category_objects}
@@ -162,5 +166,31 @@ def insert_subcategories(db, subcategories):
     subcategories (list[Subcategories]): The list of subcategories.
     """
     db.bulk_save_objects(subcategories)
-    db.add_all(subcategories)
     db.flush()
+
+
+def get_mock_interview_topics(db, job_id, user_id):
+    """
+    Get mock_interview category and subcategory.
+    db (Session): SQLAlchemy database session.
+    subcategories (list[Subcategories]): The list of subcategories.
+    """
+    mock_interview = (
+        db.query(MockInterview)
+        .filter(MockInterview.job_id == job_id, MockInterview.user_id == user_id)
+        .options(joinedload(MockInterview.categories).joinedload(Category.subcategories))
+        .first()
+    )
+
+    res = []
+    for category in mock_interview.categories:
+        res.append({
+            "category_id": category.category_id,
+            "category_name": category.category_name,
+            "subcategories": [{
+                "subcategory_id": sub.subcategory_id,
+                "status": sub.status,
+                "subcategory_name": sub.subcategory_name
+            } for sub in category.subcategories]
+        })
+    return res

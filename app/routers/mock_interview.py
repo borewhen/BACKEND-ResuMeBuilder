@@ -4,7 +4,7 @@ from typing import Annotated
 from app.database import get_db
 from app.models import User
 from app.service.user_service import jwt_required
-from app.service.mock_interview_service import create_mock_interview, parse_skills_from_job, get_transcript
+from app.service.mock_interview_service import create_mock_interview, parse_skills_from_job, get_transcript, get_mock_interview_topics
 
 router = APIRouter()
 
@@ -28,7 +28,8 @@ def generate_interview_topics(
     try:
         mock_interview, is_exist = create_mock_interview(db, job_id, user.user_id)
         if not is_exist:
-            mock_interview = parse_skills_from_job(db, job_id, mock_interview.mock_interview_id)
+            parse_skills_from_job(db, job_id, mock_interview.mock_interview_id)
+            mock_interview = get_mock_interview_topics(db, job_id, user.user_id)
         db.commit()
         return mock_interview
     except Exception as e:

@@ -11,6 +11,7 @@ router = APIRouter()
 def list_jobs(
     field: Annotated[str, Query(description="Filter jobs by field (e.g., Software Engineer)")] = None,
     page: Annotated[int, Query(description="Page number for pagination")] = 1,
+    user: User = Depends(jwt_required)
 ):
     """
     Retrieves a list of job postings based on the provided field filter.
@@ -27,6 +28,7 @@ def list_jobs(
 @router.get("/{job_id}")
 def get_job_detail(
     job_id: Annotated[int, Path(title="The ID of the item to get")], 
+    user: User = Depends(jwt_required)
 ):
     """
     Retrieves details of a specific job using job_id.

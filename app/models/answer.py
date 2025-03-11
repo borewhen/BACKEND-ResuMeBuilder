@@ -7,7 +7,7 @@ class Answer(Base):
 
     answer_id = Column(Integer, primary_key=True, index=True)
     answer = Column(String, nullable=False)
-    recommended_answer = Column(String, nullable=False)
+    feedback = Column(String, nullable=False)
     
     question_id = Column(Integer, ForeignKey("question.question_id"), nullable=False)
     question = relationship("Question", back_populates="answer")

@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException, UploadFile
 import requests
 import os
-from app.models import MockInterview, Category, Subcategory
+from app.models import MockInterview, Category, Subcategory, Question, Answer
 import openai
 import tempfile
 from app.service.job_service import get_company_name_and_job_position
@@ -170,3 +170,106 @@ def get_mock_interview_topics(db, job_id, user_id):
             } for sub in category.subcategories]
         })
     return res
+
+
+def initialize_subcategory_interview_session(db, subcategory_id):
+    """
+    creates a question for that subcategory if the subcategory for the user doesn't have any question yet.
+    Returns the result in the format:
+    {
+        "question": [],
+        "answer": [],
+        "feedback": [],
+        "status": []
+    }
+    """
+    subcategory_name = (
+        db.query(Subcategory)
+        .with_entities(Subcategory.subcategory_name)
+        .filter(Subcategory.subcategory_id == subcategory_id)
+        .scalar()
+    )
+
+    completion = openai.ChatCompletion.create(
+        model="gpt-4o",
+        messages=[
+            {
+                "role": "user",
+                "content": f"""
+                the following is an interview topic:
+
+                ---
+                {subcategory_name}
+                ---
+                
+                please provide one technical interview question regarding this topic. Just provide the question text directly without any introductory text or potential answers
+                An example format is the following "What is the difference between git pull or git fetch?""
+                """
+            }
+        ]
+    )
+    question_name = completion["choices"][0]["message"]["content"].strip().split(",")
+    new_question = Question(
+        question_name=question_name[0],
+        subcategory_id=subcategory_id
+    )
+
+    db.add(new_question)
+    db.commit()
+    db.refresh(new_question)
+
+    return {
+        "question": [new_question.question_name],
+        "answer": [],
+        "feedback": [],
+        "status": True
+    }
+
+
+def get_existing_interview_session_info(db, user_id, subcategory_id):
+    """
+    db (Session): SQLAlchemy database session.
+    Returns the result in the format:
+    {
+        "question": [],
+        "answer": [],
+        "feedback": [],
+        "status": []
+    }
+    """
+    subcategory_status = (
+        db.query(Subcategory)
+        .with_entities(Subcategory.status)
+        .filter(Subcategory.subcategory_id == subcategory_id)
+        .scalar()
+    )
+
+    questions = (
+        db.query(Question)
+        .join(Subcategory, Question.subcategory_id == Subcategory.subcategory_id)
+        .join(Category, Subcategory.category_id == Category.category_id)
+        .join(MockInterview, Category.mock_interview_id == MockInterview.mock_interview_id)
+        .filter(MockInterview.user_id == user_id, Subcategory.subcategory_id == subcategory_id)
+        .all()
+    )
+
+    if not questions:
+       return initialize_subcategory_interview_session(db, subcategory_id)
+
+    print(f">>>>>> questions {questions}")
+    question_list = []
+    answer_list = []
+    feedback_list = []
+    for question in questions:
+        question_list.append(question.question_name)
+        
+        if question.answer:
+            answer_list.append(question.answer.answer)
+            feedback_list.append(question.answer.feedback)
+
+    return {
+        "question": question_list,
+        "answer": answer_list,
+        "feedback": feedback_list,
+        "status": subcategory_status
+    }

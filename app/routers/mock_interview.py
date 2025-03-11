@@ -4,7 +4,7 @@ from typing import Annotated
 from app.database import get_db
 from app.models import User
 from app.service.user_service import jwt_required
-from app.service.mock_interview_service import create_mock_interview, parse_skills_from_job, get_mock_interview_topics
+from app.service.mock_interview_service import create_mock_interview, parse_skills_from_job, get_mock_interview_topics, get_existing_interview_session_info
 
 router = APIRouter()
 
@@ -25,3 +25,22 @@ def generate_interview_topics(
         print(str(e))
         db.rollback()  # Rollback in case of failure
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/session/{subcategory_id}")
+def get_interview_session(
+    subcategory_id: Annotated[int, Path(title="The ID of the subcategory")],
+    db: Session = Depends(get_db),
+    user: User = Depends(jwt_required)
+):
+    # get the current interview session, if doesn't exist will create a question
+    return get_existing_interview_session_info(db, user.user_id, subcategory_id)
+
+
+@router.put("/session/{subcategory_id}")
+def answer_interview_questions(
+    subcategory_id: Annotated[int, Path(title="The ID of the subcategory")],
+    db: Session = Depends(get_db),
+    user: User = Depends(jwt_required)
+):
+    pass

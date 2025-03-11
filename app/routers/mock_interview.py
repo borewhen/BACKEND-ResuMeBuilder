@@ -4,7 +4,8 @@ from typing import Annotated
 from app.database import get_db
 from app.models import User
 from app.service.user_service import jwt_required
-from app.service.mock_interview_service import create_mock_interview, parse_skills_from_job, get_mock_interview_topics, get_existing_interview_session_info
+from app.service.mock_interview_service import create_mock_interview, parse_skills_from_job, get_mock_interview_topics, get_existing_interview_session_info, initialize_subcategory_interview_session, update_answer, get_user_questions
+from app.schemas.answer import AnswerRequest
 
 router = APIRouter()
 
@@ -23,7 +24,7 @@ def generate_interview_topics(
         return mock_interview
     except Exception as e:
         print(str(e))
-        db.rollback()  # Rollback in case of failure
+        db.rollback()
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -33,14 +34,30 @@ def get_interview_session(
     db: Session = Depends(get_db),
     user: User = Depends(jwt_required)
 ):
-    # get the current interview session, if doesn't exist will create a question
+    # get the current interview session
     return get_existing_interview_session_info(db, user.user_id, subcategory_id)
+
+
+@router.post("/session/{subcategory_id}")
+def create_first_interview_question(
+    subcategory_id: Annotated[int, Path(title="The ID of the subcategory")],
+    db: Session = Depends(get_db),
+    user: User = Depends(jwt_required)
+): 
+    # creates first interview question
+    initialize_subcategory_interview_session(db, subcategory_id, user.user_id)
+    return {"message": "interview session started"}
 
 
 @router.put("/session/{subcategory_id}")
 def answer_interview_questions(
     subcategory_id: Annotated[int, Path(title="The ID of the subcategory")],
+    answer_data: AnswerRequest,
     db: Session = Depends(get_db),
-    user: User = Depends(jwt_required)
+    user: User = Depends(jwt_required),
 ):
-    pass
+    """
+    Receives an answer from the user and updates the interview session.
+    """
+    update_answer(db, user.user_id, subcategory_id, answer_data.answer)
+    return {"message": "Answer received successfully"}

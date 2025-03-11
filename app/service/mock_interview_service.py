@@ -3,9 +3,9 @@ import requests
 import os
 from app.models import MockInterview, Category, Subcategory, Question, Answer
 import openai
-import tempfile
 from app.service.job_service import get_company_name_and_job_position
 from sqlalchemy.orm import joinedload
+from sqlalchemy import desc
 
 LINKEDIN_SCRAPER_API_KEY=os.getenv("LINKEDIN_SCRAPER_API_KEY", "dummy_key")
 OPENAI_API_KEY=os.getenv("OPENAI_API_KEY", "dummy_key")
@@ -172,7 +172,7 @@ def get_mock_interview_topics(db, job_id, user_id):
     return res
 
 
-def initialize_subcategory_interview_session(db, subcategory_id):
+def initialize_subcategory_interview_session(db, subcategory_id, user_id):
     """
     creates a question for that subcategory if the subcategory for the user doesn't have any question yet.
     Returns the result in the format:
@@ -183,12 +183,16 @@ def initialize_subcategory_interview_session(db, subcategory_id):
         "status": []
     }
     """
+    questions = get_user_questions(db, user_id, subcategory_id)
     subcategory_name = (
         db.query(Subcategory)
         .with_entities(Subcategory.subcategory_name)
         .filter(Subcategory.subcategory_id == subcategory_id)
         .scalar()
     )
+
+    if questions:
+        raise HTTPException(status_code=400, detail=f"interview session for {subcategory_name} has been initialized")
 
     completion = openai.ChatCompletion.create(
         model="gpt-4o",
@@ -208,22 +212,16 @@ def initialize_subcategory_interview_session(db, subcategory_id):
             }
         ]
     )
-    question_name = completion["choices"][0]["message"]["content"].strip().split(",")
+    question_name = completion["choices"][0]["message"]["content"].strip()
+    print(f"question_name: {question_name}")
     new_question = Question(
-        question_name=question_name[0],
+        question_name=question_name,
         subcategory_id=subcategory_id
     )
 
     db.add(new_question)
     db.commit()
     db.refresh(new_question)
-
-    return {
-        "question": [new_question.question_name],
-        "answer": [],
-        "feedback": [],
-        "status": True
-    }
 
 
 def get_existing_interview_session_info(db, user_id, subcategory_id):
@@ -244,19 +242,7 @@ def get_existing_interview_session_info(db, user_id, subcategory_id):
         .scalar()
     )
 
-    questions = (
-        db.query(Question)
-        .join(Subcategory, Question.subcategory_id == Subcategory.subcategory_id)
-        .join(Category, Subcategory.category_id == Category.category_id)
-        .join(MockInterview, Category.mock_interview_id == MockInterview.mock_interview_id)
-        .filter(MockInterview.user_id == user_id, Subcategory.subcategory_id == subcategory_id)
-        .all()
-    )
-
-    if not questions:
-       return initialize_subcategory_interview_session(db, subcategory_id)
-
-    print(f">>>>>> questions {questions}")
+    questions = get_user_questions(db, user_id, subcategory_id)
     question_list = []
     answer_list = []
     feedback_list = []
@@ -273,3 +259,117 @@ def get_existing_interview_session_info(db, user_id, subcategory_id):
         "feedback": feedback_list,
         "status": subcategory_status
     }
+
+
+def get_user_questions(db, user_id, subcategory_id):
+    """
+    db (Session): SQLAlchemy database session.
+    user_id (int): The user ID.
+    subcategory_id (int): The subcategory ID.
+    """
+    questions = (
+        db.query(Question)
+        .join(Subcategory, Question.subcategory_id == Subcategory.subcategory_id)
+        .join(Category, Subcategory.category_id == Category.category_id)
+        .join(MockInterview, Category.mock_interview_id == MockInterview.mock_interview_id)
+        .filter(MockInterview.user_id == user_id, Subcategory.subcategory_id == subcategory_id)
+        .all()
+    )
+    return questions
+
+
+def update_answer(db, user_id, subcategory_id, user_answer):
+    latest_question = (
+        db.query(Question)
+        .join(Subcategory, Question.subcategory_id == Subcategory.subcategory_id)
+        .join(Category, Subcategory.category_id == Category.category_id)
+        .join(MockInterview, Category.mock_interview_id == MockInterview.mock_interview_id)
+        .filter(MockInterview.user_id == user_id, Subcategory.subcategory_id == subcategory_id)
+        .order_by(desc(Question.question_id))
+        .first()
+    )
+
+    existing_answer = (
+        db.query(Answer)
+        .filter(Answer.question_id == latest_question.question_id)
+        .first()
+    )
+
+    if not existing_answer:
+        completion = openai.ChatCompletion.create(
+            model="gpt-4o",
+            messages=[
+                {
+                    "role": "user",
+                    "content": f"""
+                    Question: {latest_question.question_name}
+
+                    Answer: {user_answer}
+
+                    Provide constructive feedback on this answer. Mention if it's correct, what can be improved, and how the response could be better. Give the feedback directly without any introductory text.
+                    For eg. Your answer is correct but lacks depth. You could mention about types of indexes, tradoffs and how indexes are stored internally! Limit this to 100 words"
+                    """
+                }
+            ]
+        )
+
+        feedback = completion["choices"][0]["message"]["content"].strip()
+        answer = Answer(
+            question_id=latest_question.question_id,
+            answer=user_answer,
+            feedback=feedback
+        )
+        db.add(answer)
+        db.flush()
+
+    questions = get_user_questions(db, user_id, subcategory_id)
+    subcategory = db.query(Subcategory).filter(Subcategory.subcategory_id == subcategory_id).first()
+    # update subcategory status if question length is 5
+    if len(questions) == 5:
+        if subcategory:
+            subcategory.status = False
+
+    # generate new question
+    if subcategory.status:
+        previous_questions = [
+            question.question_name for question in questions
+        ]
+        new_question_text = generate_new_question(db, subcategory_id, user_id, previous_questions)
+        new_question = Question(
+            subcategory_id=subcategory_id,
+            question_name=new_question_text
+        )
+        db.add(new_question)
+        db.flush()
+    
+    db.commit()
+
+
+def generate_new_question(db, subcategory_id, user_id, previous_questions):
+    """
+    creates a new question for that subcategory
+    """
+    prompt_content = f"""
+    You are an expert technical interviewer. Your task is to generate a **unique** technical interview question for the following topic.
+
+    **Topic:** {subcategory_id}
+
+    **Previously asked questions:** 
+    {', '.join(previous_questions) if previous_questions else "None"}
+
+    **Instructions:**
+    - Do NOT repeat any of the previously asked questions.
+    - The question should be challenging and test in-depth understanding.
+    - Ensure the question is different in wording and concept from previous ones.
+
+    Generate one unique interview question related to this topic. Just provide the question text directly without any introductory text or potential answers
+    An example format is the following "What is the difference between git pull or git fetch?""
+    """
+
+    completion = openai.ChatCompletion.create(
+        model="gpt-4o",
+        messages=[{"role": "user", "content": prompt_content}]
+    )
+
+    new_question = completion["choices"][0]["message"]["content"].strip()
+    return new_question

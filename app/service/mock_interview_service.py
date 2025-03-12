@@ -229,9 +229,9 @@ def get_existing_interview_session_info(db, user_id, subcategory_id):
     db (Session): SQLAlchemy database session.
     Returns the result in the format:
     {
-        "question": [],
-        "answer": [],
-        "feedback": [],
+        "questions": [],
+        "answers": [],
+        "feedbacks": [],
         "status": []
     }
     """
@@ -254,9 +254,9 @@ def get_existing_interview_session_info(db, user_id, subcategory_id):
             feedback_list.append(question.answer.feedback)
 
     return {
-        "question": question_list,
-        "answer": answer_list,
-        "feedback": feedback_list,
+        "questions": question_list,
+        "answers": answer_list,
+        "feedbacks": feedback_list,
         "status": subcategory_status
     }
 

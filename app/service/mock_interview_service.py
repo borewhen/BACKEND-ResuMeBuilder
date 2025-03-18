@@ -383,7 +383,7 @@ def generate_subcategory_summary(db, subcategory_id, user_id):
     )
 
     if subcategory_status:
-        raise HTTPException(status_code=400, detail=f"Mock interview for this subcategory has not been completed")
+        return ""
     
     subcategory = db.query(Subcategory).filter(Subcategory.subcategory_id == subcategory_id).first()
     if not subcategory:
@@ -414,7 +414,7 @@ def generate_subcategory_summary(db, subcategory_id, user_id):
             {
                 "role": "user",
                 "content": f"""
-                You are an expert technical interviewer. Your task is to generate a **unique** technical interview question for the following topic.
+                You are an expert technical interviewer. Your task is to judge the result of interview based on the interview transcript given.
 
                 **Topic:** {subcategory_id}
 
@@ -436,3 +436,108 @@ def generate_subcategory_summary(db, subcategory_id, user_id):
     db.query(Subcategory).filter(Subcategory.subcategory_id == subcategory_id).update({"summary": summary_text})
     db.commit()
     return summary_text
+
+
+def generate_mock_interview_summary(db, job_id, user_id):
+    """
+    return the summary of the mock interview
+    """
+    current_mock_interview = (
+        db.query(MockInterview)
+        .filter(MockInterview.job_id == job_id, MockInterview.user_id == user_id)
+        .options(joinedload(MockInterview.categories).joinedload(Category.subcategories))
+        .first()
+    )
+
+    if not current_mock_interview:
+        return HTTPException(status_code=404, detail="MockInterview not found")
+
+    if current_mock_interview.summary and current_mock_interview.failed_topics:
+        return {
+            "summary": current_mock_interview.summary,
+            "failed_topics": current_mock_interview.failed_topics
+        }
+
+    sub_summary = []
+    # check if all the status of the subcategories are all false
+    flag = True
+    categories = current_mock_interview.categories
+    for category in categories:
+        subcategories = category.subcategories
+        for subcategory in subcategories:
+            if subcategory.status:
+                flag = False
+                break
+
+            sub_summary.append({
+                "topic": subcategory.subcategory_name,
+                "summary": subcategory.summary
+            })
+
+    # summary "" if not all test is done
+    if not flag:
+        return {
+            "summary": "",
+            "failed_topics": ""
+        }
+    
+    # generate summary of whole interview
+    topic_summary = ""
+    for i in range(len(sub_summary)):
+        topic_summary += f""""
+
+        {i+1}. topic name: {sub_summary[i]["topic"]}
+        {i+1}. interview result summary: {sub_summary[i]["summary"]}
+
+        """
+    
+    completion = openai.ChatCompletion.create(
+        model="gpt-4o",
+        messages=[
+            {
+                "role": "user",
+                "content": f"""
+                You are an expert technical interviewer. Your task is judge interview result based on the topics tested in the interview and note down the topics that the candidate failed.
+
+                {topic_summary}
+
+                **Instructions:**
+                - Create an overall summary text of the interview, denoting which topic candidate did well and which did not.
+
+                Just provide the summary text for the feedback of the OVERALL interview directly without any introductory text
+                An example format is the following "Candidate possesses strong frontend development skill, showing strong fundamental in React and CSS. However, candidate lack expertise in system design and backend knowledge which is essential for this fullstack development role"
+                """
+            }
+        ]
+    )
+
+    summary_text = completion["choices"][0]["message"]["content"].strip()
+    completion = openai.ChatCompletion.create(
+        model="gpt-4o",
+        messages=[
+            {
+                "role": "user",
+                "content": f"""
+                You are an expert technical interviewer. Your task is to note down which topic the candidate failed. If there is no summary, then it is assumed to be good
+
+                {topic_summary}
+
+                **Instructions:**
+                - From the given interview summary/result of each topic, list down which topics did the candidate failed
+
+                Just provide the list of topics that candidate FAILED without any introductory text and give it in a comma seperated value without space
+                An example format is the following "SQL,Kubernetes,AWS"
+                """
+            }
+        ]
+    )
+
+    failed_topics = completion["choices"][0]["message"]["content"].strip()
+    current_mock_interview.summary = summary_text
+    current_mock_interview.failed_topics = failed_topics
+    db.commit()
+
+    return {
+        "summary": summary_text,
+        "failed_topics": failed_topics
+    }

@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, BigInteger
+from sqlalchemy import Column, Integer, String, ForeignKey, BigInteger, Text
 from sqlalchemy.orm import relationship
 from app.database import Base
 
@@ -10,6 +10,8 @@ class MockInterview(Base):
     user_id = Column(Integer, ForeignKey("users.user_id"), nullable=False)
     company_name =  Column(String, nullable=False)
     job_position =  Column(String, nullable=False)
+    summary = Column(Text, nullable=True)
+    failed_topics = Column(Text, nullable=True)
 
     user = relationship("User", back_populates="mock_interviews")
     categories = relationship("Category", back_populates="mock_interview", cascade="all, delete-orphan")
@@ -21,5 +23,7 @@ class MockInterview(Base):
             "job_id": self.job_id,
             "user_id": self.user_id,
             "company_name": self.company_name,
-            "job_position": self.job_position
+            "job_position": self.job_position,
+            "summary": self.summary,
+            "failed_topics": self.failed_topics
         }

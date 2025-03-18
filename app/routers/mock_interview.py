@@ -4,7 +4,7 @@ from typing import Annotated
 from app.database import get_db
 from app.models import User
 from app.service.user_service import jwt_required
-from app.service.mock_interview_service import create_mock_interview, parse_skills_from_job, get_mock_interview_topics, get_existing_interview_session_info, initialize_subcategory_interview_session, update_answer, get_user_questions, generate_subcategory_summary
+from app.service.mock_interview_service import create_mock_interview, parse_skills_from_job, get_mock_interview_topics, get_existing_interview_session_info, initialize_subcategory_interview_session, update_answer, get_user_questions, generate_subcategory_summary, generate_mock_interview_summary
 from app.schemas.answer import AnswerRequest
 
 router = APIRouter()
@@ -74,3 +74,16 @@ def create_subcategory_summary(
     """
     summary = generate_subcategory_summary(db, subcategory_id, user.user_id)
     return { "summary": summary }
+
+
+@router.get("/summary/{job_id}")
+def create_summary(
+    job_id: Annotated[int, Path(title="The ID of the job")], 
+    db: Session = Depends(get_db),
+    user: User = Depends(jwt_required),
+):
+    """
+    Generate summary per mock interview, only if all subcategory has been done
+    """
+    result = generate_mock_interview_summary(db, job_id, user.user_id)
+    return result

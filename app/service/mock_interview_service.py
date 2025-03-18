@@ -175,13 +175,6 @@ def get_mock_interview_topics(db, job_id, user_id):
 def initialize_subcategory_interview_session(db, subcategory_id, user_id):
     """
     creates a question for that subcategory if the subcategory for the user doesn't have any question yet.
-    Returns the result in the format:
-    {
-        "question": [],
-        "answer": [],
-        "feedback": [],
-        "status": []
-    }
     """
     questions = get_user_questions(db, user_id, subcategory_id)
     subcategory_name = (
@@ -229,10 +222,10 @@ def get_existing_interview_session_info(db, user_id, subcategory_id):
     db (Session): SQLAlchemy database session.
     Returns the result in the format:
     {
-        "questions": [],
-        "answers": [],
-        "feedbacks": [],
-        "status": []
+        "question": [],
+        "answer": [],
+        "feedback": [],
+        "status": bool
     }
     """
     subcategory_status = (
@@ -373,3 +366,73 @@ def generate_new_question(db, subcategory_id, user_id, previous_questions):
 
     new_question = completion["choices"][0]["message"]["content"].strip()
     return new_question
+
+
+def generate_subcategory_summary(db, subcategory_id, user_id):
+    """
+    return subcategory summary
+    {
+        summary: str
+    }
+    """
+    subcategory_status = (
+        db.query(Subcategory)
+        .with_entities(Subcategory.status)
+        .filter(Subcategory.subcategory_id == subcategory_id)
+        .scalar()
+    )
+
+    if subcategory_status:
+        raise HTTPException(status_code=400, detail=f"Mock interview for this subcategory has not been completed")
+    
+    subcategory = db.query(Subcategory).filter(Subcategory.subcategory_id == subcategory_id).first()
+    if not subcategory:
+        raise HTTPException(status_code=404, detail="Subcategory not found")
+
+    if subcategory.summary and subcategory.summary.strip():
+        return subcategory.summary
+
+    interview_session = get_existing_interview_session_info(db, user_id, subcategory_id)
+    interview_text = ""
+
+    for i in range(len(interview_session["questions"])):
+        question = interview_session["questions"][i]
+        answer = interview_session["answers"][i]
+        feedback = interview_session["feedbacks"][i]
+
+        interview_text += f"""
+
+        Question_{i+1}: {question}
+        Answer_{i+1}: {answer}
+        Feedback_{i+1}: {feedback}
+
+        """
+
+    completion = openai.ChatCompletion.create(
+        model="gpt-4o",
+        messages=[
+            {
+                "role": "user",
+                "content": f"""
+                You are an expert technical interviewer. Your task is to generate a **unique** technical interview question for the following topic.
+
+                **Topic:** {subcategory_id}
+
+                **Interview Transcript:** 
+                {interview_text}
+
+                **Instructions:**
+                - Based on the feedback on the answers of each question, generate an overall summary/feedback on the user performance on their mastery of the topics
+                - The summary should concludes whether the user has sufficiently passed the interview or not
+
+                Just provide the summary text for the feedback of the OVERALL interview directly without any introductory text
+                An example format is the following "Candidate has demonstrated strong technical understanding in SQL database, however candidate is lacking knowledge on the use case for NoSQL database. Therefore, candidate did not passed the interview."
+                """
+            }
+        ]
+    )
+
+    summary_text = completion["choices"][0]["message"]["content"].strip()
+    db.query(Subcategory).filter(Subcategory.subcategory_id == subcategory_id).update({"summary": summary_text})
+    db.commit()
+    return summary_text

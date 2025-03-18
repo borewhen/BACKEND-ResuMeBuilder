@@ -4,7 +4,7 @@ from typing import Annotated
 from app.database import get_db
 from app.models import User
 from app.service.user_service import jwt_required
-from app.service.mock_interview_service import create_mock_interview, parse_skills_from_job, get_mock_interview_topics, get_existing_interview_session_info, initialize_subcategory_interview_session, update_answer, get_user_questions
+from app.service.mock_interview_service import create_mock_interview, parse_skills_from_job, get_mock_interview_topics, get_existing_interview_session_info, initialize_subcategory_interview_session, update_answer, get_user_questions, generate_subcategory_summary
 from app.schemas.answer import AnswerRequest
 
 router = APIRouter()
@@ -61,3 +61,16 @@ def answer_interview_questions(
     """
     update_answer(db, user.user_id, subcategory_id, answer_data.answer)
     return {"message": "Answer received successfully"}
+
+
+@router.get("/{subcategory_id}/summary")
+def create_subcategory_summary(
+    subcategory_id: Annotated[int, Path(title="The ID of the subcategory")],
+    db: Session = Depends(get_db),
+    user: User = Depends(jwt_required),
+):
+    """
+    Generating summary per subcategory, only if status is false
+    """
+    summary = generate_subcategory_summary(db, subcategory_id, user.user_id)
+    return { "summary": summary }

@@ -13,6 +13,7 @@ class MockInterview(Base):
 
     user = relationship("User", back_populates="mock_interviews")
     categories = relationship("Category", back_populates="mock_interview", cascade="all, delete-orphan")
+    course = relationship("Course", uselist=False, back_populates="mock_interview")
 
     def __repr__(self):
         return {

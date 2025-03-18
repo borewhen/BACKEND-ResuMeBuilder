@@ -43,5 +43,5 @@ def get_job_detail(
         if not job:
             raise HTTPException(status_code=404, detail="Job not found")
         return job
-    except Exception:
+    except Exception as e:
         raise HTTPException(status_code=500, detail="Internal server error")

@@ -102,6 +102,7 @@ def create_mock_interview(db, job_id: int, user_id: int):
         res = []
         for category in existing_mock_interview.categories:
             res.append({
+                "mock_interview_id": existing_mock_interview.mock_interview_id,
                 "category_id": category.category_id,
                 "category_name": category.category_name,
                 "subcategories": [{
@@ -161,6 +162,7 @@ def get_mock_interview_topics(db, job_id, user_id):
     res = []
     for category in mock_interview.categories:
         res.append({
+            "mock_interview_id": mock_interview.mock_interview_id,
             "category_id": category.category_id,
             "category_name": category.category_name,
             "subcategories": [{
@@ -318,7 +320,7 @@ def update_answer(db, user_id, subcategory_id, user_answer):
     questions = get_user_questions(db, user_id, subcategory_id)
     subcategory = db.query(Subcategory).filter(Subcategory.subcategory_id == subcategory_id).first()
     # update subcategory status if question length is 5
-    if len(questions) == 5:
+    if len(questions) == 1:
         if subcategory:
             subcategory.status = False
 

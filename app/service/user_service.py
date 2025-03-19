@@ -31,12 +31,11 @@ def authenticate_user(db: Session, email: str, password: str) -> Optional[dict]:
     # Generate access token
     token_data = {"sub": str(user.user_id), "exp": datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)}
     access_token = jwt.encode(token_data, SECRET_KEY, algorithm=ALGORITHM)
-
     return {
         "access_token": access_token,
         "user": {
-            "id": user.user_id,
-            "name": user.username,
+            "id": user.id,
+            "name": user.name,
             "email": user.email,
             "role": user.role,
         }

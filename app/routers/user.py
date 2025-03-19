@@ -28,7 +28,7 @@ def login(response: Response, user_credentials: UserLogin, db: Session = Depends
 
     if not user_data:
         raise HTTPException(status_code=401, detail="Invalid credentials")
-
+    
     # Set HTTP-only cookie for access token
     response.set_cookie(
         key="access_token",

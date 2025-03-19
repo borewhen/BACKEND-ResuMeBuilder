@@ -10,7 +10,7 @@ from app.schemas.course import CourseCreateRequest
 router = APIRouter()
 
 @router.get("")
-def generate_course(
+def get_course(
     db: Session = Depends(get_db),
     user: User = Depends(jwt_required)
 ):

@@ -5,4 +5,5 @@ from app.models.subcategory import Subcategory
 from app.models.question import Question
 from app.models.answer import Answer
 from app.models.course import Course
-from app.models.subtopic import CourseSubtopic
+from app.models.unit import Unit
+from app.models.chapter import Chapter

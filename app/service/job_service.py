@@ -79,3 +79,23 @@ def get_company_name_and_job_position(job_id):
         "company_name": job_data.get("company_name", "Unknown"),
         "job_position": job_data.get("job_position", "Unknown")
     }
+
+
+def get_company_logo_from_job_id(job_id):
+    """
+    get company logo
+    """
+    response = response = requests.get(
+        f"https://api.scrapingdog.com/linkedinjobs",
+        params={"api_key": LINKEDIN_SCRAPER_API_KEY, "job_id": {job_id}},
+    )
+    if response.status_code != 200:
+        raise HTTPException(status_code=500, detail=f"Error fetching jobs: {response.text}")
+
+    job_data = response.json()[0]
+    response = requests.get(
+        f"https://api.scrapingdog.com/linkedinjobs",
+        params={"api_key": LINKEDIN_SCRAPER_API_KEY, "field": job_data.get("company_name", "Unknown"), "page": 1, "geoid": 102454443},
+    )
+    
+    return response.json()[0].get("company_logo_url", "")

@@ -18,3 +18,4 @@ class User(Base):
     created_at = Column(Date, default=date.today)
 
     mock_interviews = relationship("MockInterview", back_populates="user", cascade="all, delete-orphan")
+    courses = relationship("Course", back_populates="user", cascade="all, delete-orphan")

@@ -1,1 +1,1 @@
-from app.schemas import user, answer
+from app.schemas import user, answer, course

@@ -22,5 +22,6 @@ class Chapter(Base):
             "chapter_name": self.chapter_name,
             "video_thumbnail": self.video_thumbnail,
             "video_title": self.video_title,
-            "video_transcript": self.video_transcript
+            "video_transcript": self.video_transcript,
+            "video_id": self.video_id
         }

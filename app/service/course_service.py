@@ -5,7 +5,7 @@ from app.models import Chapter, Unit, Course, MockInterview
 import openai
 from sqlalchemy.orm import joinedload
 from sqlalchemy import desc
-from app.service.job_service import get_company_logo_from_job_id
+from app.service.job_service import get_company_logo_from_job_id, get_company_name_and_job_position
 import re
 from youtube_transcript_api import YouTubeTranscriptApi
 
@@ -61,8 +61,9 @@ def create_course(db, mock_interview_id, user_id):
         return existing_course
     
     company_logo = get_company_logo_from_job_id(mock_interview.job_id)
+    company_info = get_company_name_and_job_position(mock_interview.job_id)
 
-    new_course = Course(mock_interview_id=mock_interview_id, image_url=company_logo, user_id=user_id)
+    new_course = Course(mock_interview_id=mock_interview_id, image_url=company_logo, user_id=user_id, job_position=company_info["job_position"], company_name=company_info["company_name"])
     db.add(new_course)
     db.flush()
 

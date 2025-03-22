@@ -16,6 +16,7 @@ class Unit(Base):
         """Serialize the Unit object into a dictionary."""
         return {
             "unit_id": self.unit_id,
+            "unit_name": self.unit_name,
             "course_id": self.course_id,
             "chapters": [chapter.to_dict() for chapter in self.chapters]
         }

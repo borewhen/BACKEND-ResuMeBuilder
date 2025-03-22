@@ -49,8 +49,16 @@ def create_course(db, mock_interview_id, user_id):
         .first()
     )
 
+    existing_course = (
+        db.query(Course)
+        .filter(Course.mock_interview_id == mock_interview_id)
+        .first()
+    )
+
     if not mock_interview:
         raise HTTPException(status_code=404, detail=f"Course not found")
+    elif existing_course:
+        return existing_course
     
     company_logo = get_company_logo_from_job_id(mock_interview.job_id)
 
@@ -59,7 +67,7 @@ def create_course(db, mock_interview_id, user_id):
     db.flush()
 
     all_chapters = []
-    failed_topics = mock_interview.failed_topics.split()
+    failed_topics = mock_interview.failed_topics.split(",")
     for unit_name in failed_topics:
         prompt_prefix = f"This is a course with given the unit of the topic: {unit_name}, "
         visited = ""
@@ -95,6 +103,8 @@ def create_course(db, mock_interview_id, user_id):
 
     db.bulk_insert_mappings(Chapter, all_chapters)
     db.commit()
+
+    return new_course
 
 
 def create_course_video(db, course_id):

@@ -6,7 +6,7 @@ import openai
 import re
 
 LINKEDIN_SCRAPER_API_KEY=os.getenv("LINKEDIN_SCRAPER_API_KEY", "dummy_key")
-
+OPENAI_API_KEY=os.getenv("OPENAI_API_KEY", "dummy_key")
 
 def scrape_jobs_list(field: str, page: str):
     """
@@ -24,6 +24,26 @@ def scrape_jobs_list(field: str, page: str):
 
 
 def scrape_job_detail(job_id):
+    """
+    gets job detail from scraping linkedin
+    job_id (int): this is unique identifier for job
+    """
+    try:
+        response = response = requests.get(
+            f"https://api.scrapingdog.com/linkedinjobs",
+            params={"api_key": LINKEDIN_SCRAPER_API_KEY, "job_id": {job_id}},
+        )
+        if response.status_code != 200:
+            raise HTTPException(status_code=500, detail=f"Error fetching jobs: {response.text}")
+        
+        job_detail = response.json()
+        return job_detail
+    except Exception as e:
+        print(str(e))
+        raise HTTPException(status_code=500)
+    
+
+def format_desc(job_id):
     """
     gets job detail from scraping linkedin
     job_id (int): this is unique identifier for job
@@ -57,10 +77,12 @@ def scrape_job_detail(job_id):
 
         raw_html = completion["choices"][0]["message"]["content"].strip()
         formatted_html = re.sub(r"^```html\n|```$", "", raw_html).strip()
-        job_detail[0]["job_description"] = "".join(line.strip() for line in formatted_html.replace("\\n", "").replace('\\"', '"').split("\n"))
-        return job_detail
+        print(f"formatted: {formatted_html}")
+        return "".join(line.strip() for line in formatted_html.replace("\\n", "").replace('\\"', '"').split("\n"))
     except Exception as e:
+        print(str(e))
         raise HTTPException(status_code=500)
+
 
 
 def get_company_name_and_job_position(job_id):

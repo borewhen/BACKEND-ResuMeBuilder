@@ -1,9 +1,12 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, BigInteger, Text
+from sqlalchemy import Column, Integer, String, ForeignKey, BigInteger, Text, UniqueConstraint
 from sqlalchemy.orm import relationship
 from app.database import Base
 
 class MockInterview(Base):
     __tablename__ = "mock_interview"
+    __table_args__ = (
+        UniqueConstraint('job_id', 'user_id', name='uix_job_user'),
+    )
 
     mock_interview_id = Column(Integer, primary_key=True, index=True)
     job_id = Column(BigInteger, nullable=False)

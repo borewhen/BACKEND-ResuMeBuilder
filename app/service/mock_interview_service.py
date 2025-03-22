@@ -102,6 +102,7 @@ def create_mock_interview(db, job_id: int, user_id: int):
         res = []
         for category in existing_mock_interview.categories:
             res.append({
+                "mock_interview_id": existing_mock_interview.mock_interview_id,
                 "category_id": category.category_id,
                 "category_name": category.category_name,
                 "subcategories": [{
@@ -161,6 +162,7 @@ def get_mock_interview_topics(db, job_id, user_id):
     res = []
     for category in mock_interview.categories:
         res.append({
+            "mock_interview_id": mock_interview.mock_interview_id,
             "category_id": category.category_id,
             "category_name": category.category_name,
             "subcategories": [{

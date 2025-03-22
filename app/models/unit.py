@@ -18,5 +18,6 @@ class Unit(Base):
             "unit_id": self.unit_id,
             "unit_name": self.unit_name,
             "course_id": self.course_id,
+            "unit_name": self.unit_name,
             "chapters": [chapter.to_dict() for chapter in self.chapters]
         }

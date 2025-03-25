@@ -7,6 +7,8 @@ from app.models.answer import Answer
 from app.models.course import Course
 from app.models.unit import Unit
 from app.models.chapter import Chapter
-from app.models.video_interview_session import VideoInterviewSession
-from app.models.video_interview_question import VideoInterviewQuestion
-from app.models.video_interview_answer import VideoInterviewAnswer
+from app.models.video_interview_models import (
+    VideoInterviewSession,
+    VideoInterviewQuestion,
+    VideoInterviewAnswer
+)

@@ -320,7 +320,7 @@ def update_answer(db, user_id, subcategory_id, user_answer):
     questions = get_user_questions(db, user_id, subcategory_id)
     subcategory = db.query(Subcategory).filter(Subcategory.subcategory_id == subcategory_id).first()
     # update subcategory status if question length is 5
-    if len(questions) == 5:
+    if len(questions) == 1:
         if subcategory:
             subcategory.status = False
 

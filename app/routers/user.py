@@ -35,7 +35,6 @@ def login(response: Response, user_credentials: UserLogin, db: Session = Depends
         value=user_data["access_token"],
         httponly=True,
         secure=False,  # Set to False if running locally without HTTPS
-        samesite="Lax",
         samesite="Strict",
         max_age=60 * 60,  # 1 hour
     )

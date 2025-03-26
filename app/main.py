@@ -10,20 +10,6 @@ app.include_router(user.router, prefix="/user", tags=["Users"])
 app.include_router(job.router, prefix="/job", tags=["Jobs"])
 app.include_router(video.router, prefix="/video", tags=["VideoUpload"])
 
-# Define allowed origins
-origins = [
-    "http://localhost:3000", # development environment
-    # Add the production URL here
-]
-
-# Add CORS middleware
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 app.include_router(resume_extraction.router, prefix="/resume", tags=["resume_extraction"])
 app.include_router(mock_interview.router, prefix="/mock_interview", tags=["mock_interview"])
 app.include_router(course.router, prefix="/course", tags=["course"])

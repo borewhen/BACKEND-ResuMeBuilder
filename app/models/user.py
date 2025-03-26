@@ -17,8 +17,5 @@ class User(Base):
     role = Column(String, nullable=False)  # Possible values: 'employer', 'employee', 'admin'
     created_at = Column(Date, default=date.today)
 
-    experiences = relationship("Experience", back_populates="user")
-    job_applications = relationship("JobApplication", back_populates="user")
-    videos = relationship("Video", back_populates="user")
     mock_interviews = relationship("MockInterview", back_populates="user", cascade="all, delete-orphan")
     courses = relationship("Course", back_populates="user", cascade="all, delete-orphan")

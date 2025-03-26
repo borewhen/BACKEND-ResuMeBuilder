@@ -36,7 +36,8 @@ def login(response: Response, user_credentials: UserLogin, db: Session = Depends
         httponly=True,
         secure=False,  # Set to False if running locally without HTTPS
         samesite="Lax",
+        samesite="Strict",
         max_age=60 * 60,  # 1 hour
     )
 
-    return {"message": "Login successful", "user": user_data["user"]}
+    return {"message": "Login successful", "user": user_data["user"], "access_token": user_data["access_token"]}

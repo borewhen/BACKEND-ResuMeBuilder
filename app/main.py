@@ -8,7 +8,7 @@ app = FastAPI(debug=True)
 # Include the routers for user job and video routes
 app.include_router(user.router, prefix="/user", tags=["Users"])
 app.include_router(job.router, prefix="/job", tags=["Jobs"])
-app.include_router(video.router, prefix="/video", tags=["VideoUpload"])
+
 
 app.include_router(resume_extraction.router, prefix="/resume", tags=["resume_extraction"])
 app.include_router(mock_interview.router, prefix="/mock_interview", tags=["mock_interview"])

@@ -1,3 +1,4 @@
+'''
 from fastapi import APIRouter, File, UploadFile
 from app.service.video_service import process_video
 from pydantic import BaseModel
@@ -24,3 +25,4 @@ async def upload_video(file: UploadFile = File(...)):
         return VideoUploadResponse(success=True, message="Video uploaded and processed successfully.", transcript=data['transcript'], analysis=data['analysis'])
     except Exception as e:
         return VideoUploadResponse(success=False, message=str(e))
+'''

@@ -20,12 +20,6 @@ facial_landmarks_detector = FacialLandmarksDetector("models/landmarks-regression
 head_pose_estimator = HeadPoseEstimator('models/head-pose-estimation-adas-0001')
 gaze_estimator = GazeEstimator('models/gaze-estimation-adas-0002')
 
-# Dummy person counting model function (replace with your actual model)
-def count_persons(image: np.ndarray) -> int:
-    return np.random.randint(0, 5)  # Replace with model inference
-
-eye_contact = []
-
 @router.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()

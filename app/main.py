@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException, Request, Depends
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
-from app.routers import user, job,resume_extraction, mock_interview ,video, course, interview,interview_questions # Import routers
+from app.routers import generate_interview, user, job,resume_extraction, mock_interview ,video, course, interview,interview_questions, generate_interview # Import routers
 
 app = FastAPI(debug=True)
 
@@ -15,6 +15,7 @@ app.include_router(mock_interview.router, prefix="/mock_interview", tags=["mock_
 app.include_router(course.router, prefix="/course", tags=["course"])
 app.include_router(interview.router, prefix="/interview", tags=["interview"])
 app.include_router(interview_questions.router, prefix="/questions", tags=["interview_questions"])
+app.include_router(generate_interview.router, prefix="/generate_interview", tags=["generate_interview"])
 
 
 # Define allowed origins

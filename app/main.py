@@ -17,7 +17,8 @@ app.include_router(interview.router, prefix="/interview", tags=["interview"])
 
 # Define allowed origins
 origins = [
-    "http://localhost:3000", # development environment
+    "http://localhost:3000",
+    "http://localhost:3001"  # development environment
     # Add the production URL here
 ]
 

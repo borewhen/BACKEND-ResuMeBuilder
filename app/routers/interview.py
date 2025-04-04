@@ -14,6 +14,7 @@ from app.service.eye_contact.facial_landmarks_detection import FacialLandmarksDe
 from app.service.eye_contact.gaze_estimation import GazeEstimator
 from app.service.eye_contact.main import detect_eye_contact
 
+eye_contact = []
 router = APIRouter()
 face_detector = FaceDetector("models/face-detection-retail-0004")
 facial_landmarks_detector = FacialLandmarksDetector("models/landmarks-regression-retail-0009")

@@ -3,8 +3,8 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models.users_resume import UsersResume
-from app.service.generate_interview_service import handle_resume_upload,handle_answer,get_interview_data, handle_finish_interview
-
+from app.service.generate_interview_service import handle_resume_upload,handle_answer,get_interview_data, handle_finish_interview, generate_video_interview_summary
+from typing import List
 
 router = APIRouter()
 
@@ -15,8 +15,18 @@ class SubmitAnswerRequest(BaseModel):
 class QuestionRequest(BaseModel):
     user_id: int
 
+class InterviewItem(BaseModel):
+    question: str
+    answer: str
+
+class Interview(BaseModel):
+    questions: List[str]
+    answers: List[str]
+
 class FinishInterviewRequest(BaseModel):
     user_id: int
+    summary: str
+    interview: Interview
     
 @router.post("/start-interview")
 async def start_interview(
@@ -53,7 +63,8 @@ async def submit_answer(payload: SubmitAnswerRequest, db: Session = Depends(get_
 @router.post("/finish-interview")
 async def finish_interview(payload: FinishInterviewRequest, db: Session = Depends(get_db)):
     try:
+        feedback = generate_video_interview_summary(payload, db=db)
         handle_finish_interview(user_id=payload.user_id, db=db)
-        return {"message": "Interview finished successfully."}
+        return feedback
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error finishing interview: {str(e)}")

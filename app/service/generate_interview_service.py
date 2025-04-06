@@ -153,3 +153,64 @@ def handle_finish_interview(user_id: int, db: Session) -> None:
         raise e
     finally:
         return {"message": "DB reset successfully"}
+
+
+def generate_video_interview_summary(payload, db):
+    # 1. generate technical answer summary feedback
+    questions = payload.interview.questions
+    answers = payload.interview.answers
+    prompt = ""
+
+    for i in range(min(len(questions), len(answers))):
+        prompt += f"""
+            Q{i+1}. {questions[i]}
+            A{i+1}. {answers[i]}
+        """
+    
+    completion = openai.ChatCompletion.create(
+        model="gpt-4o",
+        messages=[
+            {
+                "role": "user",
+                "content": f"""
+                You are an expert technical interviewer that is currently interviewing candidates based on their resume. Given the interview transcript below, give the overall feedback on the candidates's technical skills. 
+
+                {prompt}
+
+                **Instructions:**
+                - Create an overall summary text of the interview, denoting which topic candidate did well and which did not.
+
+                Just provide the summary text for the feedback of the OVERALL interview directly without any introductory text
+                An example format is the following "Candidate possesses strong frontend development skill and able to confidently explain their past work experiences on this topic."
+                """
+            }
+        ]
+    )
+    technical_feedback = completion["choices"][0]["message"]["content"].strip()
+
+    # 2. generate feedback for eye contact detection
+    completion = openai.ChatCompletion.create(
+        model="gpt-4o",
+        messages=[
+            {
+                "role": "user",
+                "content": f"""
+                You are an expert technical interviewer. In the interview, you are supposed to judge whether the candidate mantain good eye contact or not.
+
+                The following is the observation: {payload.summary}
+
+                **Instructions:**
+                - Create an overall summary, whether interviewee mantain good eye contact or not
+
+                Just provide a short summary text (max 30 words) for the feedback of the OVERALL interview directly without any introductory text
+                An example format is the following "The candidate demonstrated limited eye contact throughout the interview, often looking away from the camera. This impacted the overall impression of confidence and engagement."
+                """
+            }
+        ]
+    )
+    eye_contact_feedback = completion["choices"][0]["message"]["content"].strip()
+
+    return {
+        "technical_feedback": technical_feedback,
+        "eye_contact_feedback": eye_contact_feedback
+    }

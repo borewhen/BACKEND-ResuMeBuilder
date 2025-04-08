@@ -43,8 +43,8 @@ def generate_course(
     """
     create new course based on this mock interview
     """
-    create_course(db, mock_interview_id, user.user_id)
-    return {"message": "course created successfully"}
+    course = create_course(db, mock_interview_id, user.user_id)
+    return {"message": "course created successfully", "course_id": course.course_id}
 
 
 @router.put("/{course_id}")

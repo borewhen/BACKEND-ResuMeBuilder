@@ -39,8 +39,9 @@ def parse_skills_from_job(db, job_id, mock_interview_id):
                     {job_detail[0].get("job_description", "No description available.")}
                     ---
                     
-                    what are the technical skills required and group these technical skills into categories?
+                    What are the technical skills required and group these technical skills into categories?
                     group related specific skills such as (html, css, js) under a broader category "Frontend Development", or (nodejs, python, kafka) is grouped and category "Backend Development".  
+                    Do not include non-technical skills such as Data communication, project management etc
                     Give me 4 skill categories at max, it's okay to give less if there is none.
                     Give it in the following format in coma seperated without space eg. "Backend Development,Frontend Development,AI".
                     Also don't include redundant topics such as "monitoring and logging", "cloud" and "devops" should be only under one category "devops"
@@ -102,6 +103,7 @@ def create_mock_interview(db, job_id: int, user_id: int):
         res = []
         for category in existing_mock_interview.categories:
             res.append({
+                "mock_interview_id": existing_mock_interview.mock_interview_id,
                 "category_id": category.category_id,
                 "category_name": category.category_name,
                 "subcategories": [{
@@ -161,6 +163,7 @@ def get_mock_interview_topics(db, job_id, user_id):
     res = []
     for category in mock_interview.categories:
         res.append({
+            "mock_interview_id": mock_interview.mock_interview_id,
             "category_id": category.category_id,
             "category_name": category.category_name,
             "subcategories": [{
@@ -318,7 +321,7 @@ def update_answer(db, user_id, subcategory_id, user_answer):
     questions = get_user_questions(db, user_id, subcategory_id)
     subcategory = db.query(Subcategory).filter(Subcategory.subcategory_id == subcategory_id).first()
     # update subcategory status if question length is 5
-    if len(questions) == 5:
+    if len(questions) == 1:
         if subcategory:
             subcategory.status = False
 
@@ -424,6 +427,9 @@ def generate_subcategory_summary(db, subcategory_id, user_id):
                 **Instructions:**
                 - Based on the feedback on the answers of each question, generate an overall summary/feedback on the user performance on their mastery of the topics
                 - The summary should concludes whether the user has sufficiently passed the interview or not
+                - Give an explanation on which area to improve on for the user to pass the interview
+                - Provide a suggested answer to the question without introductory text
+
 
                 Just provide the summary text for the feedback of the OVERALL interview directly without any introductory text
                 An example format is the following "Candidate has demonstrated strong technical understanding in SQL database, however candidate is lacking knowledge on the use case for NoSQL database. Therefore, candidate did not passed the interview."

@@ -1,20 +1,24 @@
 from fastapi import FastAPI, HTTPException, Request, Depends
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
-from app.routers import user, job,resume_extraction, mock_interview , course # Import routers
+from app.routers import user, job,resume_extraction, mock_interview , course, interview # Import routers
 
 app = FastAPI(debug=True)
 
-# Include the routers for user and job routes
+# Include the routers for user job and video routes
 app.include_router(user.router, prefix="/user", tags=["Users"])
 app.include_router(job.router, prefix="/job", tags=["Jobs"])
+
+
 app.include_router(resume_extraction.router, prefix="/resume", tags=["resume_extraction"])
 app.include_router(mock_interview.router, prefix="/mock_interview", tags=["mock_interview"])
 app.include_router(course.router, prefix="/course", tags=["course"])
+app.include_router(interview.router, prefix="/interview", tags=["interview"])
 
 # Define allowed origins
 origins = [
-    "http://localhost:3000", # development environment
+    "http://localhost:3000",
+    "http://localhost:3001"  # development environment
     # Add the production URL here
 ]
 

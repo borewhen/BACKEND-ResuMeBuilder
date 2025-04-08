@@ -5,7 +5,7 @@ from app.models import Chapter, Unit, Course, MockInterview
 import openai
 from sqlalchemy.orm import joinedload
 from sqlalchemy import desc
-from app.service.job_service import get_company_logo_from_job_id
+from app.service.job_service import get_company_logo_from_job_id, get_company_name_and_job_position
 import re
 from youtube_transcript_api import YouTubeTranscriptApi
 
@@ -49,17 +49,26 @@ def create_course(db, mock_interview_id, user_id):
         .first()
     )
 
+    existing_course = (
+        db.query(Course)
+        .filter(Course.mock_interview_id == mock_interview_id)
+        .first()
+    )
+
     if not mock_interview:
         raise HTTPException(status_code=404, detail=f"Course not found")
+    elif existing_course:
+        return existing_course
     
     company_logo = get_company_logo_from_job_id(mock_interview.job_id)
+    company_info = get_company_name_and_job_position(mock_interview.job_id)
 
-    new_course = Course(mock_interview_id=mock_interview_id, image_url=company_logo, user_id=user_id)
+    new_course = Course(mock_interview_id=mock_interview_id, image_url=company_logo, user_id=user_id, job_position=company_info["job_position"], company_name=company_info["company_name"])
     db.add(new_course)
     db.flush()
 
     all_chapters = []
-    failed_topics = mock_interview.failed_topics.split()
+    failed_topics = mock_interview.failed_topics.split(",")
     for unit_name in failed_topics:
         prompt_prefix = f"This is a course with given the unit of the topic: {unit_name}, "
         visited = ""
@@ -95,6 +104,8 @@ def create_course(db, mock_interview_id, user_id):
 
     db.bulk_insert_mappings(Chapter, all_chapters)
     db.commit()
+
+    return new_course
 
 
 def create_course_video(db, course_id):

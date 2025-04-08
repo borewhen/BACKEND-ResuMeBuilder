@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, Path
 from app.models import User
 from app.service.user_service import jwt_required
-from app.service.job_service import scrape_jobs_list, scrape_job_detail
+from app.service.job_service import scrape_jobs_list, scrape_job_detail, format_desc
 from typing import List, Dict
 from typing import Annotated
 
@@ -43,5 +43,27 @@ def get_job_detail(
         if not job:
             raise HTTPException(status_code=404, detail="Job not found")
         return job
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="Internal server error")
+    
+
+@router.get("/{job_id}/description")
+def format_job_desc(
+    job_id: Annotated[int, Path(title="The ID of the item to get")], 
+    user: User = Depends(jwt_required)
+):
+    """
+    Retrieves description of a specific job using job_id.
+    - job_id: The unique identifier for the job.
+    - user: Requires authentication (JWT token).
+    """
+    if job_id <= 0:
+        raise HTTPException(status_code=400, detail="Invalid job ID")
+
+    try:
+        desc = format_desc(job_id)
+        if not desc:
+            raise HTTPException(status_code=404, detail="Job not found")
+        return desc
     except Exception as e:
         raise HTTPException(status_code=500, detail="Internal server error")

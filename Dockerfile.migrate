@@ -3,38 +3,20 @@ FROM python:3.10.5
 WORKDIR /app
 
 RUN apt-get update && apt-get install -y \
-    build-essential \
-    gcc \
-    g++ \
-    libffi-dev \
-    libblas-dev \
-    liblapack-dev \
-    libopenblas-dev \
-    libatlas-base-dev \
-    libgl1-mesa-glx \
-    libglib2.0-0 \
-    libsm6 \
-    libxext6 \
-    libxrender1 \
-    libgl1-mesa-dev \
-    python3-dev \
-    python3-pip \
-    make \
-    cmake \
-    libssl-dev \
     libpq-dev \
+    python3-dev \
     curl \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 ENV BLIS_ARCH="generic"
 
 COPY requirements.txt .
+RUN pip install --upgrade pip==24.0 && \
+    pip install -r requirements.txt
 
-RUN pip install --upgrade pip==24.0
-RUN pip install -r requirements.txt
-
-COPY . .
-
-EXPOSE 8000
+COPY alembic.ini .
+COPY alembic ./alembic
+COPY app/db.py ./app/db.py
 
 ENTRYPOINT ["alembic"]
+CMD ["upgrade", "head"]

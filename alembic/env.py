@@ -10,6 +10,12 @@ from app.models import User, MockInterview, Category, Subcategory, Question, Ans
 
 from alembic import context
 
+# for prod sql
+def run_migrations_online():
+    configuration = config.get_section(config.config_ini_section)
+    db_url = os.getenv("DATABASE_URL", "").replace("postgres://", "postgresql://")
+    configuration["sqlalchemy.url"] = db_url
+
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config

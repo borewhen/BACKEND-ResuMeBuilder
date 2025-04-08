@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException, Request, Depends
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
-from routers import user, job,resume_extraction, mock_interview , course, interview # Import routers （FIXED DIRECTORY)
+from .routers import user, job,resume_extraction, mock_interview , course, interview # Import routers （FIXED DIRECTORY)
 
 app = FastAPI(debug=True)
 

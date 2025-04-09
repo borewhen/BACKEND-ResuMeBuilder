@@ -15,6 +15,7 @@ RUN apt-get update && apt-get install -y \
     python3-pip \
     make \
     cmake \
+    libstdc++6 \
     libssl-dev \
     libpq-dev \
     curl \

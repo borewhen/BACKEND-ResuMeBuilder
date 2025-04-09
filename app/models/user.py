@@ -19,3 +19,7 @@ class User(Base):
 
     mock_interviews = relationship("MockInterview", back_populates="user", cascade="all, delete-orphan")
     courses = relationship("Course", back_populates="user", cascade="all, delete-orphan")
+    users_resume = relationship("UsersResume", back_populates="user", uselist=False)
+    video_interview_questions = relationship("VideoInterviewQuestion", back_populates="user", cascade="all, delete-orphan")
+
+

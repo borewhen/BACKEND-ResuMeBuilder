@@ -161,10 +161,10 @@ def generate_video_interview_summary(payload, db):
     answers = payload.interview.answers
     prompt = ""
 
-    for i in range(min(len(questions), len(answers))):
+    for i in range(len(questions) if len(questions) == 1 else len(answers)):
         prompt += f"""
             Q{i+1}. {questions[i]}
-            A{i+1}. {answers[i]}
+            A{i+1}. {answers[i] if i < len(answers) else "No answer provided"}
         """
     
     completion = openai.ChatCompletion.create(
@@ -187,7 +187,7 @@ def generate_video_interview_summary(payload, db):
         ]
     )
     technical_feedback = completion["choices"][0]["message"]["content"].strip()
-
+    print("technical_feedback :", technical_feedback)
     # 2. generate feedback for eye contact detection
     completion = openai.ChatCompletion.create(
         model="gpt-4o",

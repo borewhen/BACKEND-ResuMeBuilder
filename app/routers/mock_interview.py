@@ -29,7 +29,7 @@ def generate_interview_topics(
 
 
 @router.get("/session/{subcategory_id}")
-def get_interview_session(
+def get_interview_data(
     subcategory_id: Annotated[int, Path(title="The ID of the subcategory")],
     db: Session = Depends(get_db),
     user: User = Depends(jwt_required)

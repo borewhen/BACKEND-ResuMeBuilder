@@ -14,17 +14,12 @@ from app.service.eye_contact.facial_landmarks_detection import FacialLandmarksDe
 from app.service.eye_contact.gaze_estimation import GazeEstimator
 from app.service.eye_contact.main import detect_eye_contact
 
+eye_contact = []
 router = APIRouter()
 face_detector = FaceDetector("models/face-detection-retail-0004")
 facial_landmarks_detector = FacialLandmarksDetector("models/landmarks-regression-retail-0009")
 head_pose_estimator = HeadPoseEstimator('models/head-pose-estimation-adas-0001')
 gaze_estimator = GazeEstimator('models/gaze-estimation-adas-0002')
-
-# Dummy person counting model function (replace with your actual model)
-def count_persons(image: np.ndarray) -> int:
-    return np.random.randint(0, 5)  # Replace with model inference
-
-eye_contact = []
 
 @router.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):

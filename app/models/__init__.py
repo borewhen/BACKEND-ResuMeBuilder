@@ -7,3 +7,5 @@ from app.models.answer import Answer
 from app.models.course import Course
 from app.models.unit import Unit
 from app.models.chapter import Chapter
+from app.models.users_resume import UsersResume
+from app.models.video_interview_questions import VideoInterviewQuestion

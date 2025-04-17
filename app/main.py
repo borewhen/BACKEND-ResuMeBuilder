@@ -21,14 +21,15 @@ app.include_router(generate_interview.router, prefix="/generate_interview", tags
 # Define allowed origins
 origins = [
     "http://localhost:3000",
-    "http://localhost:3001"  # development environment
-    # Add the production URL here
+    "http://localhost:3001",
+    "https://resume-ai-blush.vercel.app" #prod
 ]
 
-# Add CORS middleware
+# Add CORS middleware, also allow Vercel preview URLs!
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
+    allow_origin_regex=r"^https:\/\/resume-.*-borewhens-projects\.vercel\.app$",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

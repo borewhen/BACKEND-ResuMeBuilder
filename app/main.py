@@ -30,7 +30,7 @@ origins = [
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
-    allow_origin_regex=r"^https:\/\/(resume|uhired)-.*-borewhens-projects\.vercel\.app$",
+    allow_origin_regex=r"^https:\/\/(resume|uhired)-.*\.vercel\.app$",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

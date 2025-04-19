@@ -238,29 +238,29 @@ def initialize_subcategory_interview_session(db, subcategory_id, user_id):
                 "Typescript": [
                     {
                         "question": "How does TypeScript improve code maintainability in large-scale applications?",
-                        "feedback": "good"
+                        "feedback": "Your answer correctly highlights the key benefit of TypeScript—static typing—and how it contributes to maintainability by catching errors early and improving code predictability. To improve your answer, consider expanding slightly on how better tooling (like autocompletion, refactoring support, and IDE integration) enhances developer productivity, especially in collaborative environments. Overall, your answer is technically accurate and relevant, but adding a bit more detail would demonstrate a deeper, more practical understanding of TypeScript's strengths in large codebases."
                     },
                     {
                         "question": "What are the differences between interface and type in TypeScript?",
-                        "feedback": "good"
+                        "feedback": "Your answer contains several critical inaccuracies. First, while interface and type can overlap in functionality (especially for defining object shapes), they are not exactly the same. Saying they are interchangeable in all cases is misleading. A correct answer should accurately describe their capabilities and subtle differences, such as type being more versatile for unions and tuples, while interface is better for declaring object structures and supporting declaration merging."
                     },
                     {
                         "question": "Explain generics in TypeScript and give a practical use case.",
-                        "feedback": "pending"
+                        "feedback": "Your answer contains several misunderstandings about how generics work in TypeScript. First, generics do not make code run faster—they are a compile-time feature that provides type safety and reusability, not performance improvements. Second, generics are not meant to replace interfaces; in fact, they often work alongside interfaces to define flexible and reusable contracts. Third, using generics to add two numbers is not an appropriate example, since arithmetic operations require specific types like number, and generics would not enforce type constraints properly in that context."
                     }
                 ],
                 "Next.js": [
                     {
                         "question": "How does Next.js handle server-side rendering (SSR) vs. static site generation (SSG)?",
-                        "feedback": "pending"
+                        "feedback": "Your answer clearly distinguishes between SSR and SSG, accurately explaining how Next.js handles each. Mentioning getServerSideProps and getStaticProps with their appropriate use cases shows a good grasp of practical implementation. Including Incremental Static Regeneration is a bonus, reflecting awareness of Next.js's optimization features. This is a well-structured and technically correct response."
                     },
                     {
                         "question": "What’s the benefit of using getServerSideProps versus getStaticProps?",
-                        "feedback": "pending"
+                        "feedback": "This answer effectively explains the trade-offs between getServerSideProps and getStaticProps, emphasizing when to use each. You correctly highlight the benefits in terms of freshness vs. performance, which shows thoughtful consideration of real-world scenarios. Clear and accurate—well done."
                     },
                     {
                         "question": "How do you implement API routes in Next.js?",
-                        "feedback": "pending"
+                        "feedback": "Your answer demonstrates a solid understanding of how API routes work in Next.js. You correctly mention the file structure and how routing is inferred. Highlighting the use of req and res, and comparing it to Express.js, helps clarify the concept. A strong and practical explanation suitable for a technical interview."
                     }
                 ]
             },
@@ -268,15 +268,15 @@ def initialize_subcategory_interview_session(db, subcategory_id, user_id):
                 "Embeddings": [
                     {
                         "question": "What is an embedding in the context of language models, and how is it typically generated?",
-                        "feedback": "This is technically true but too vague. Expand by saying embeddings are high-dimensional vectors that capture semantic similarity, enabling tasks like clustering, search, and classification. Describe how they allow comparison between documents in a meaningful way."
+                        "feedback": "This is a strong and technically accurate explanation. You clearly describe what an embedding is, how it’s generated using language models, and why it’s useful. Highlighting the role of embeddings in capturing semantic similarity and enabling various NLP tasks shows depth of understanding. To further strengthen your answer, you could briefly mention that embeddings are typically dense vectors (e.g., 768 or 1536 dimensions) and often normalized for similarity comparisons—but overall, this is a well-rounded and effective response."
                     },
                     {
                         "question": "Why are vector similarity metrics like cosine similarity important when working with embeddings?",
-                        "feedback": "This lacks technical reasoning. A good answer would compare trade-offs: OpenAI for performance/convenience, SBERT for open-source and latency, and in-house for control/cost. Mention evaluation techniques like embedding similarity tests or downstream task accuracy."
+                        "feedback": "This is a strong technical explanation. You not only defined cosine similarity but also justified why it is preferred in the context of embeddings. Mentioning direction vs. magnitude and alternatives like Euclidean distance shows depth of understanding. Solid response for evaluating text similarity in NLP systems."
                     },
                     {
                         "question": "What are some common use cases of text embeddings in modern AI systems?",
-                        "feedback": "This shows no awareness of scaling challenges. Improved answers might mention chunk deduplication, hierarchical indexing (e.g., HNSW), filtering metadata, or embedding compression. Performance tuning is critical as database size grows."
+                        "feedback": "This answer provides a well-rounded explanation of the most common and impactful uses of text embeddings in AI systems. You demonstrate a clear understanding of both high-level applications and low-level operational considerations, such as ANN search and performance tuning. Including specific techniques like chunking and filtering shows awareness of real-world scalability challenges. Overall, your response is technically accurate, comprehensive, and practical—well-suited for a technical interview."
                     }
                 ],
                 "Retrieval-Augmented Generation (RAG)": [
@@ -298,29 +298,29 @@ def initialize_subcategory_interview_session(db, subcategory_id, user_id):
                 "API Design": [
                     {
                         "question": "What are REST vs GraphQL tradeoffs for AI-based platforms?",
-                        "feedback": "pending"
+                        "feedback": "Your answer effectively captures the fundamental difference between RESTful APIs and GraphQL, making it a strong response for an interview. You clearly explain that REST relies on multiple resource-specific endpoints with server-defined responses, which can result in over-fetching or under-fetching of data. In contrast, you correctly highlight that GraphQL uses a single endpoint and allows clients to request exactly the data they need, offering more flexibility and efficiency. To enhance your answer further, you could briefly mention that while GraphQL offers more control to the client, it can introduce added complexity on the server side due to schema management and resolver logic. Additionally, polishing the flow of your explanation slightly—such as using more formal connectors—can improve clarity and delivery. Overall, your response is accurate, concise, and well-suited for a technical interview."
                     },
                     {
                         "question": "What are the principles of RESTful API",
-                        "feedback": "pending"
+                        "feedback": "Your answer captures the core principles of RESTful API design accurately and concisely, making it a solid response in a technical interview context. You correctly explain statelessness, client-server separation, uniform interface and resource-based design. However, for a more complete and impressive answer, consider briefly mentioning cacheability, which is another key REST constraint. RESTful responses should be explicitly marked as cacheable or not to improve performance and reduce server load. You might also consider touching on layered system architecture, which allows intermediaries like proxies or load balancers to be included in the network for better scalability and security. Overall, your explanation is technically sound and well-structured. With minor additions, it would demonstrate a comprehensive grasp of REST principles."
                     },
                     {
                         "question": "What are the most common approaches to versioning REST API?",
-                        "feedback": "pending"
+                        "feedback": "Your answer is correct and demonstrates a solid understanding of the common REST API versioning strategies. However, to improve your response for an interview setting, I would encourage you to elaborate briefly on each method, even with just one line per approach. For example, you could mention that URI versioning (/api/v1/resource) is the most commonly used due to its simplicity and visibility, while header and media type versioning are more REST-compliant but add complexity. Including the pros and cons helps demonstrate not just knowledge of the options, but also awareness of when and why to use them."
                     }
                 ],
                 "Serverless Architectures": [
                     {
                         "question": "What is serverless architecture, and how does it differ from traditional server-based models?",
-                        "feedback": "Oversimplified. Mention benefits like scalability, pay-per-use, and ease of deployment — but also limitations like execution time limits, cold starts, and resource constraints. Use examples like AWS Lambda or Google Cloud Functions."
+                        "feedback": "Your answer is correct and well-structured, especially for a concise interview response. To strengthen the answer further, consider briefly acknowledging one limitation—such as cold starts or vendor lock-in—to show a balanced understanding. But overall, your response is technically accurate"
                     },
                     {
                         "question": "Name two popular serverless platforms and explain what they offer.",
-                        "feedback": "Cold starts impact latency-sensitive applications. A better response could include pre-warming strategies, using provisioned concurrency (in AWS), minimizing dependencies, or offloading tasks to background workers."
+                        "feedback": "Your answer is accurate, concise, and clearly demonstrates understanding of the core capabilities of AWS Lambda and Google Cloud Functions. You correctly highlight that both platforms abstract server management, support automatic scaling, and use a pay-per-use billing model."
                     },
                     {
                         "question": "Does serverless mean there are no servers involved?",
-                        "feedback": "Honest, but unhelpful. Even if unfamiliar, you can still describe hypothetical usage (e.g., triggering Lambda via S3 upload to process PDFs) to show conceptual understanding."
+                        "feedback": "Your answer is correct and clearly explains a common misconception about serverless architecture. You accurately point out that servers still exist in serverless computing, but the key difference is that developers are not responsible for managing them. Your explanation of server abstraction and cloud provider responsibility is well-stated and aligns with how modern serverless platforms operate. For an interview, this is a solid and confident response. If you want to enhance it slightly, you could briefly mention the benefits of this abstraction—such as faster deployment and improved focus on application logic—but overall, your answer demonstrates a strong understanding of the concept."
                     }
                 ]
             }
@@ -671,8 +671,8 @@ def generate_mock_interview_summary(db, job_id, user_id):
         }
     
         time.sleep(7)
-        summary = "Candidate has demonstrated strong technical understanding in SQL database, however candidate is lacking knowledge on the use case for NoSQL database. Therefore, candidate did not passed the interview."
-        failed_topics = "Retrieval-Augmented Generation (RAG),Embeddings,Serverless Architectures"
+        summary = "The candidate demonstrated a strong grasp of modern frontend and backend integration concepts, excelling in Next.js, API design, serverless architecture, and text embeddings. Their answers were technically accurate, well-articulated, and showcased awareness of both conceptual foundations and practical implementation. However, the candidate did not perform well in the TypeScript section, where they exhibited critical misunderstandings about fundamental concepts such as the difference between type and interface, and the purpose of generics. These gaps could affect maintainability and correctness in large-scale TypeScript codebases. Additionally, the candidate failed the Retrieval-Augmented Generation (RAG) portion, indicating a limited understanding of how language models leverage retrieval mechanisms, which is important for modern AI-integrated applications."
+        failed_topics = "Retrieval-Augmented Generation (RAG),Typescript"
         curr_summary.summary = summary
         curr_summary.failed_topics = failed_topics
         db.commit()

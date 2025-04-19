@@ -69,7 +69,9 @@ def format_desc(job_id):
                     {job_detail[0].get("job_description", "No description available.")}
                     ---
                     
-                    Ensure it includes proper HTML tags (such as <h1>, <p>, <ul>, <li> where needed), and format them under one <div> with class name of job-desc-container. Don't include escaped newlines (\n) and backslashes (\\)
+                    1. Ensure it includes proper HTML tags (such as <h1>, <p>, <ul>, <li> where needed), and format them under one <div> with class name of job-desc-container. Don't include escaped newlines (\n) and backslashes (\\)
+                    2. don't include description starting with headings such as "The Company" or "Description", just proceed with the content of the job description
+                    3. don't use any of h1, h2, h3. All sections (eg. about us, responsibiltiies, requirements) must be <p> tag with bold style
                     """
                 }
             ]

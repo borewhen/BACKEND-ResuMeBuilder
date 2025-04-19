@@ -225,16 +225,118 @@ def initialize_subcategory_interview_session(db, subcategory_id, user_id):
     )
 
     if job_id == 42012811001:
-        questions = ["...", "???", "aaa"]
-        feedbacks = ["good", "bad", "ok"]
-        for feedback, question in zip(feedbacks, questions): 
-            new_question = Question(question_name=question, subcategory_id=subcategory_id)
+        print(">>>>>>>>>")
+        category_name = (
+            db.query(Category.category_name)
+            .join(Subcategory, Subcategory.category_id == Category.category_id)
+            .filter(Subcategory.subcategory_id == subcategory_id)
+            .scalar()
+        )
+        print("category_name: ", category_name)
+
+        question_map = {
+            "Frontend Engineering": {
+                "Typescript": [
+                    {
+                        "question": "How does TypeScript improve code maintainability in large-scale applications?",
+                        "feedback": "good"
+                    },
+                    {
+                        "question": "What are the differences between interface and type in TypeScript?",
+                        "feedback": "good"
+                    },
+                    {
+                        "question": "Explain generics in TypeScript and give a practical use case.",
+                        "feedback": "pending"
+                    }
+                ],
+                "Next.js": [
+                    {
+                        "question": "How does Next.js handle server-side rendering (SSR) vs. static site generation (SSG)?",
+                        "feedback": "pending"
+                    },
+                    {
+                        "question": "What’s the benefit of using getServerSideProps versus getStaticProps?",
+                        "feedback": "pending"
+                    },
+                    {
+                        "question": "How do you implement API routes in Next.js?",
+                        "feedback": "pending"
+                    }
+                ]
+            },
+            "LLM & AI System": {
+                "Embeddings": [
+                    {
+                        "question": "What is an embedding in the context of language models, and how is it typically generated?",
+                        "feedback": "pending"
+                    },
+                    {
+                        "question": "Why are vector similarity metrics like cosine similarity important when working with embeddings?",
+                        "feedback": "pending"
+                    },
+                    {
+                        "question": "What are some common use cases of text embeddings in modern AI systems?",
+                        "feedback": "pending"
+                    }
+                ],
+                "Retrieval-Augmented Generation (RAG)": [
+                    {
+                        "question": "What is Retrieval-Augmented Generation (RAG), and how does it enhance the capabilities of language models?",
+                        "feedback": "pending"
+                    },
+                    {
+                        "question": "What are the main components of a RAG pipeline, and how do they interact during inference?",
+                        "feedback": "pending"
+                    },
+                    {
+                        "question": "How does using external knowledge in RAG mitigate hallucination in LLM outputs?",
+                        "feedback": "pending"
+                    }
+                ]
+            },
+            "Backend Engineering": {
+                "API Design": [
+                    {
+                        "question": "What are REST vs GraphQL tradeoffs for AI-based platforms?",
+                        "feedback": "pending"
+                    },
+                    {
+                        "question": "What are the principles of RESTful API",
+                        "feedback": "pending"
+                    },
+                    {
+                        "question": "What are the most common approaches to versioning REST API?",
+                        "feedback": "pending"
+                    }
+                ],
+                "Serverless Architectures": [
+                    {
+                        "question": "What is serverless architecture, and how does it differ from traditional server-based models?",
+                        "feedback": "pending"
+                    },
+                    {
+                        "question": "Name two popular serverless platforms and explain what they offer.",
+                        "feedback": "pending"
+                    },
+                    {
+                        "question": "Does serverless mean there are no servers involved?",
+                        "feedback": "pending"
+                    }
+                ]
+            }
+        }
+
+        questions_list = question_map[category_name][subcategory_name]
+        print(">>>>>>>>>>", questions_list)
+        for question in questions_list: 
+            new_question = Question(question_name=question["question"], subcategory_id=subcategory_id)
             db.add(new_question)
             db.flush()
             answer = Answer(
                 question_id=new_question.question_id,
                 answer="",
-                feedback=feedback
+                feedback=question["feedback"]
             )
             db.add(answer)
             db.flush()

@@ -268,29 +268,29 @@ def initialize_subcategory_interview_session(db, subcategory_id, user_id):
                 "Embeddings": [
                     {
                         "question": "What is an embedding in the context of language models, and how is it typically generated?",
-                        "feedback": "pending"
+                        "feedback": "This is technically true but too vague. Expand by saying embeddings are high-dimensional vectors that capture semantic similarity, enabling tasks like clustering, search, and classification. Describe how they allow comparison between documents in a meaningful way."
                     },
                     {
                         "question": "Why are vector similarity metrics like cosine similarity important when working with embeddings?",
-                        "feedback": "pending"
+                        "feedback": "This lacks technical reasoning. A good answer would compare trade-offs: OpenAI for performance/convenience, SBERT for open-source and latency, and in-house for control/cost. Mention evaluation techniques like embedding similarity tests or downstream task accuracy."
                     },
                     {
                         "question": "What are some common use cases of text embeddings in modern AI systems?",
-                        "feedback": "pending"
+                        "feedback": "This shows no awareness of scaling challenges. Improved answers might mention chunk deduplication, hierarchical indexing (e.g., HNSW), filtering metadata, or embedding compression. Performance tuning is critical as database size grows."
                     }
                 ],
                 "Retrieval-Augmented Generation (RAG)": [
                     {
                         "question": "What is Retrieval-Augmented Generation (RAG), and how does it enhance the capabilities of language models?",
-                        "feedback": "pending"
+                        "feedback": "This shows surface-level understanding. A stronger answer would describe how RAG works: retrieving relevant documents from a knowledge base (via a retriever like a vector search), then feeding those documents as context into a generative model like GPT. Emphasize benefits like reduced hallucination and better factual grounding."
                     },
                     {
                         "question": "What are the main components of a RAG pipeline, and how do they interact during inference?",
-                        "feedback": "pending"
+                        "feedback": "This ignores key steps. The answer should involve converting documents to text, chunking, embedding the chunks, storing them in a vector database, then retrieving relevant chunks based on user queries before passing to the LLM. Highlighting these steps shows real understanding."
                     },
                     {
                         "question": "How does using external knowledge in RAG mitigate hallucination in LLM outputs?",
-                        "feedback": "pending"
+                        "feedback": "This lacks specificity. Evaluation should involve metrics like retrieval precision/recall, relevance ranking (e.g. NDCG), and answer quality (e.g. BLEU, ROUGE, human evals). Including these shows maturity in understanding system performance."
                     }
                 ]
             },
@@ -312,15 +312,15 @@ def initialize_subcategory_interview_session(db, subcategory_id, user_id):
                 "Serverless Architectures": [
                     {
                         "question": "What is serverless architecture, and how does it differ from traditional server-based models?",
-                        "feedback": "pending"
+                        "feedback": "Oversimplified. Mention benefits like scalability, pay-per-use, and ease of deployment — but also limitations like execution time limits, cold starts, and resource constraints. Use examples like AWS Lambda or Google Cloud Functions."
                     },
                     {
                         "question": "Name two popular serverless platforms and explain what they offer.",
-                        "feedback": "pending"
+                        "feedback": "Cold starts impact latency-sensitive applications. A better response could include pre-warming strategies, using provisioned concurrency (in AWS), minimizing dependencies, or offloading tasks to background workers."
                     },
                     {
                         "question": "Does serverless mean there are no servers involved?",
-                        "feedback": "pending"
+                        "feedback": "Honest, but unhelpful. Even if unfamiliar, you can still describe hypothetical usage (e.g., triggering Lambda via S3 upload to process PDFs) to show conceptual understanding."
                     }
                 ]
             }

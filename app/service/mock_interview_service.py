@@ -7,6 +7,7 @@ from app.service.job_service import get_company_name_and_job_position
 from sqlalchemy.orm import joinedload
 from sqlalchemy import desc
 from sqlalchemy.exc import IntegrityError
+import time
 
 LINKEDIN_SCRAPER_API_KEY=os.getenv("LINKEDIN_SCRAPER_API_KEY", "dummy_key")
 OPENAI_API_KEY=os.getenv("OPENAI_API_KEY", "dummy_key")
@@ -18,15 +19,16 @@ def parse_skills_from_job(db, job_id, mock_interview_id):
     job_description (str)
     """
     try:
+        time.sleep(3)
         if job_id == 42012811001:
             categories = ["Frontend Engineering", "LLM & AI System", "Backend Engineering"]
             category_map = insert_categories(db, mock_interview_id, categories)
-            sub = [Subcategory(category_id="Frontend Engineering", subcategory_name="Typescript"),
-                   Subcategory(category_id="Frontend Engineering", subcategory_name="Next.js"),
-                   Subcategory(category_id="LLM & AI System", subcategory_name="Retrieval-Augmented Generation (RAG)"),
-                   Subcategory(category_id="LLM & AI System", subcategory_name="Embeddings"),
-                   Subcategory(category_id="Backend Engineering", subcategory_name="API Design"),
-                   Subcategory(category_id="Backend Engineering", subcategory_name="Serverless Architectures")]
+            sub = [Subcategory(category_id=category_map["Frontend Engineering"], subcategory_name="Typescript"),
+                   Subcategory(category_id=category_map["Frontend Engineering"], subcategory_name="Next.js"),
+                   Subcategory(category_id=category_map["LLM & AI System"], subcategory_name="Retrieval-Augmented Generation (RAG)"),
+                   Subcategory(category_id=category_map["LLM & AI System"], subcategory_name="Embeddings"),
+                   Subcategory(category_id=category_map["Backend Engineering"], subcategory_name="API Design"),
+                   Subcategory(category_id=category_map["Backend Engineering"], subcategory_name="Serverless Architectures")]
             insert_subcategories(db, sub)
             return
         
@@ -205,7 +207,7 @@ def initialize_subcategory_interview_session(db, subcategory_id, user_id):
         .filter(Subcategory.subcategory_id == subcategory_id)
         .scalar()
     )
-
+    
     if questions:
         raise HTTPException(status_code=400, detail=f"interview session for {subcategory_name} has been initialized")
 

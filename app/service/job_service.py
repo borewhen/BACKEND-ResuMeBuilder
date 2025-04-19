@@ -91,6 +91,11 @@ def get_company_name_and_job_position(job_id):
     """
     get company name and job position
     """
+    if job_id == 42012811001:
+        return {
+            "company_name": "Nova AI",
+            "job_position": "Full-Stack Developer"   
+        }
     response = response = requests.get(
         f"https://api.scrapingdog.com/linkedinjobs",
         params={"api_key": LINKEDIN_SCRAPER_API_KEY, "job_id": {job_id}},

@@ -18,6 +18,18 @@ def parse_skills_from_job(db, job_id, mock_interview_id):
     job_description (str)
     """
     try:
+        if job_id == 42012811001:
+            categories = ["Frontend Engineering", "LLM & AI System", "Backend Engineering"]
+            category_map = insert_categories(db, mock_interview_id, categories)
+            sub = [Subcategory(category_id="Frontend Engineering", subcategory_name="Typescript"),
+                   Subcategory(category_id="Frontend Engineering", subcategory_name="Next.js"),
+                   Subcategory(category_id="LLM & AI System", subcategory_name="Retrieval-Augmented Generation (RAG)"),
+                   Subcategory(category_id="LLM & AI System", subcategory_name="Embeddings"),
+                   Subcategory(category_id="Backend Engineering", subcategory_name="API Design"),
+                   Subcategory(category_id="Backend Engineering", subcategory_name="Serverless Architectures")]
+            insert_subcategories(db, sub)
+            return
+        
         response = response = requests.get(
             f"https://api.scrapingdog.com/linkedinjobs",
             params={"api_key": LINKEDIN_SCRAPER_API_KEY, "job_id": {job_id}},

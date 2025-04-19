@@ -225,7 +225,6 @@ def initialize_subcategory_interview_session(db, subcategory_id, user_id):
     )
 
     if job_id == 42012811001:
-        print(">>>>>>>>>")
         category_name = (
             db.query(Category.category_name)
             .join(Subcategory, Subcategory.category_id == Category.category_id)
@@ -328,7 +327,6 @@ def initialize_subcategory_interview_session(db, subcategory_id, user_id):
         }
 
         questions_list = question_map[category_name][subcategory_name]
-        print(">>>>>>>>>>", questions_list)
         for question in questions_list: 
             new_question = Question(question_name=question["question"], subcategory_id=subcategory_id)
             db.add(new_question)

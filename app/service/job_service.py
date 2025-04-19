@@ -119,6 +119,9 @@ def get_company_logo_from_job_id(job_id):
     """
     get company logo
     """
+    if (job_id == 42012811001):
+        return "https://media.licdn.com/dms/image/v2/D560BAQHn4CmVqM4SyA/company-logo_200_200/company-logo_200_200/0/1712652396164/novoai_logo?e=1750291200&v=beta&t=fikhIzHChooHBUnwyrKT3HhvacufD430iBr_sO6qSyc"
+
     response = response = requests.get(
         f"https://api.scrapingdog.com/linkedinjobs",
         params={"api_key": LINKEDIN_SCRAPER_API_KEY, "job_id": {job_id}},

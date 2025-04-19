@@ -208,7 +208,7 @@ def get_jobid_from_subcategory(db, subcategory_id):
         .filter(Subcategory.subcategory_id == subcategory_id)
         .scalar()
     )
-    return job_id.job_id
+    return job_id
 
 def initialize_subcategory_interview_session(db, subcategory_id, user_id):
     """
@@ -286,6 +286,39 @@ def get_existing_interview_session_info(db, user_id, subcategory_id):
         "status": bool
     }
     """
+    job_id = get_jobid_from_subcategory(db, subcategory_id)
+    if job_id == 42012811001:
+        subcategory_status = (
+            db.query(Subcategory)
+            .with_entities(Subcategory.status)
+            .filter(Subcategory.subcategory_id == subcategory_id)
+            .scalar()
+        )
+        questions = get_user_questions(db, user_id, subcategory_id)
+        question_list = []
+        answer_list = []
+        feedback_list = []
+        
+        for question in questions:
+            question_list.append(question.question_name)
+            
+            if question.answer:
+                answer_list.append(question.answer.answer)
+                feedback_list.append(question.answer.feedback)
+
+        question_count = 1
+        for answer in answer_list:
+            if answer != "":
+                question_count += 1
+        
+        
+        
+        return {
+            "questions": question_list[:question_count],
+            "answers": answer_list,
+            "feedbacks": feedback_list,
+            "status": subcategory_status   
+        }
     subcategory_status = (
         db.query(Subcategory)
         .with_entities(Subcategory.status)
@@ -303,7 +336,7 @@ def get_existing_interview_session_info(db, user_id, subcategory_id):
         if question.answer:
             answer_list.append(question.answer.answer)
             feedback_list.append(question.answer.feedback)
-
+        
     return {
         "questions": question_list,
         "answers": answer_list,
@@ -324,6 +357,7 @@ def get_user_questions(db, user_id, subcategory_id):
         .join(Category, Subcategory.category_id == Category.category_id)
         .join(MockInterview, Category.mock_interview_id == MockInterview.mock_interview_id)
         .filter(MockInterview.user_id == user_id, Subcategory.subcategory_id == subcategory_id)
+        .order_by(Question.question_id.asc())
         .all()
     )
     return questions

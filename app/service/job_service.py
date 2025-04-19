@@ -29,7 +29,7 @@ def scrape_job_detail(job_id):
     job_id (int): this is unique identifier for job
     """
     try:
-        response = response = requests.get(
+        response = requests.get(
             f"https://api.scrapingdog.com/linkedinjobs",
             params={"api_key": LINKEDIN_SCRAPER_API_KEY, "job_id": {job_id}},
         )

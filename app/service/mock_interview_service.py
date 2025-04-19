@@ -403,7 +403,6 @@ def get_existing_interview_session_info(db, user_id, subcategory_id):
         
         for question in questions:
             question_list.append(question.question_name)
-
             if question.answer and not question.answer.answer:
                 break
             elif question.answer:
@@ -461,6 +460,26 @@ def get_user_questions(db, user_id, subcategory_id):
 
 
 def update_answer(db, user_id, subcategory_id, user_answer):
+    job_id = get_jobid_from_subcategory(db, subcategory_id)
+    if job_id == 42012811001:        
+        questions = get_user_questions(db, user_id, subcategory_id)
+        
+        answered_questions = 0
+        for question in questions:
+            answered_questions += 1
+            if question.answer and not question.answer.answer:
+                question.answer.answer = user_answer
+                db.commit()
+                break
+        
+        if answered_questions == 3:
+            subcategory = db.query(Subcategory).filter(Subcategory.subcategory_id == subcategory_id).first()
+            if subcategory:
+                subcategory.status = False
+                db.commit()
+        return
+        
+        
     latest_question = (
         db.query(Question)
         .join(Subcategory, Question.subcategory_id == Subcategory.subcategory_id)
@@ -564,6 +583,17 @@ def generate_subcategory_summary(db, subcategory_id, user_id):
         summary: str
     }
     """
+    job_id = get_jobid_from_subcategory(db, subcategory_id)
+    if job_id == 42012811001:
+        curr_summary = db.query(Subcategory).filter(Subcategory.subcategory_id == subcategory_id).first()
+        if curr_summary and curr_summary.summary:
+            return curr_summary.summary
+        
+        time.sleep(3)
+        curr_summary.summary = "summary template"
+        db.commit()
+        return curr_summary.summary
+    
     subcategory_status = (
         db.query(Subcategory)
         .with_entities(Subcategory.status)
@@ -634,6 +664,24 @@ def generate_mock_interview_summary(db, job_id, user_id):
     """
     return the summary of the mock interview
     """
+    if job_id == 42012811001:
+        curr_summary = db.query(MockInterview).filter(MockInterview.job_id == job_id, MockInterview.user_id == user_id).first()
+        if curr_summary and curr_summary.summary:
+            return {
+            "summary": curr_summary.summary,
+            "failed_topics": curr_summary.failed_topics
+        }
+    
+        time.sleep(7)
+        summary = "Candidate has demonstrated strong technical understanding in SQL database, however candidate is lacking knowledge on the use case for NoSQL database. Therefore, candidate did not passed the interview."
+        failed_topics = "Retrieval-Augmented Generation (RAG),Embeddings,Serverless Architectures"
+        curr_summary.summary = summary
+        curr_summary.failed_topics = failed_topics
+        db.commit()
+        return {
+            "summary": summary,
+            "failed_topics": failed_topics
+        }
     current_mock_interview = (
         db.query(MockInterview)
         .filter(MockInterview.job_id == job_id, MockInterview.user_id == user_id)

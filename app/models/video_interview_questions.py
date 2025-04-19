@@ -10,6 +10,7 @@ class VideoInterviewQuestion(Base):
     user_id = Column(Integer, ForeignKey("users.user_id"), nullable=False)
     question = Column(Text, nullable=False)
     answer = Column(Text, nullable=True)
+    feedback = Column(Text, nullable=True)
     follow_up = Column(Integer, ForeignKey("video_interview_questions.id"), nullable=True)
     order = Column(Float)  # 0, 1, 2 for main, 0.1, 1.1 for follow-ups
     created_at = Column(DateTime, default=datetime.utcnow)

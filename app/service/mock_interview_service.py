@@ -7,6 +7,7 @@ from app.service.job_service import get_company_name_and_job_position
 from sqlalchemy.orm import joinedload
 from sqlalchemy import desc
 from sqlalchemy.exc import IntegrityError
+from app.service.mapping_service import question_map, question_map_2
 import time
 
 LINKEDIN_SCRAPER_API_KEY=os.getenv("LINKEDIN_SCRAPER_API_KEY", "dummy_key")
@@ -32,6 +33,17 @@ def parse_skills_from_job(db, job_id, mock_interview_id):
             insert_subcategories(db, sub)
             return
         
+        if job_id == 42012811002:
+            categories = ["Data Analysis & Modelling", "Data Tools & Technologies"]
+            category_map = insert_categories(db, mock_interview_id, categories)
+            sub = [Subcategory(category_id=category_map["Data Analysis & Modelling"], subcategory_name="Data Preprocessing"),
+                   Subcategory(category_id=category_map["Data Analysis & Modelling"], subcategory_name="Feature Engineering"),
+                   Subcategory(category_id=category_map["Data Analysis & Modelling"], subcategory_name="Model Evaluation"),
+                   Subcategory(category_id=category_map["Data Tools & Technologies"], subcategory_name="SQL Databases"),
+                   Subcategory(category_id=category_map["Data Tools & Technologies"], subcategory_name="Visualization Tools"),
+                   Subcategory(category_id=category_map["Data Tools & Technologies"], subcategory_name="Python for Data Science")]
+            insert_subcategories(db, sub)
+            return
         response = response = requests.get(
             f"https://api.scrapingdog.com/linkedinjobs",
             params={"api_key": LINKEDIN_SCRAPER_API_KEY, "job_id": {job_id}},
@@ -224,116 +236,21 @@ def initialize_subcategory_interview_session(db, subcategory_id, user_id):
         .scalar()
     )
 
-    if job_id == 42012811001:
+    if job_id == 42012811001 or job_id == 42012811002:
         category_name = (
             db.query(Category.category_name)
             .join(Subcategory, Subcategory.category_id == Category.category_id)
             .filter(Subcategory.subcategory_id == subcategory_id)
             .scalar()
         )
-        print("category_name: ", category_name)
-
-        question_map = {
-            "Frontend Engineering": {
-                "Typescript": [
-                    {
-                        "question": "How does TypeScript improve code maintainability in large-scale applications?",
-                        "feedback": "Your answer correctly highlights the key benefit of TypeScript—static typing—and how it contributes to maintainability by catching errors early and improving code predictability. To improve your answer, consider expanding slightly on how better tooling (like autocompletion, refactoring support, and IDE integration) enhances developer productivity, especially in collaborative environments. Overall, your answer is technically accurate and relevant, but adding a bit more detail would demonstrate a deeper, more practical understanding of TypeScript's strengths in large codebases."
-                    },
-                    {
-                        "question": "What are the differences between interface and type in TypeScript?",
-                        "feedback": "Your answer contains several critical inaccuracies. First, while interface and type can overlap in functionality (especially for defining object shapes), they are not exactly the same. Saying they are interchangeable in all cases is misleading. A correct answer should accurately describe their capabilities and subtle differences, such as type being more versatile for unions and tuples, while interface is better for declaring object structures and supporting declaration merging."
-                    },
-                    {
-                        "question": "Explain generics in TypeScript and give a practical use case.",
-                        "feedback": "Your answer contains several misunderstandings about how generics work in TypeScript. First, generics do not make code run faster—they are a compile-time feature that provides type safety and reusability, not performance improvements. Second, generics are not meant to replace interfaces; in fact, they often work alongside interfaces to define flexible and reusable contracts. Third, using generics to add two numbers is not an appropriate example, since arithmetic operations require specific types like number, and generics would not enforce type constraints properly in that context."
-                    }
-                ],
-                "Next.js": [
-                    {
-                        "question": "How does Next.js handle server-side rendering (SSR) vs. static site generation (SSG)?",
-                        "feedback": "Your answer clearly distinguishes between SSR and SSG, accurately explaining how Next.js handles each. Mentioning getServerSideProps and getStaticProps with their appropriate use cases shows a good grasp of practical implementation. Including Incremental Static Regeneration is a bonus, reflecting awareness of Next.js's optimization features. This is a well-structured and technically correct response."
-                    },
-                    {
-                        "question": "What’s the benefit of using getServerSideProps versus getStaticProps?",
-                        "feedback": "This answer effectively explains the trade-offs between getServerSideProps and getStaticProps, emphasizing when to use each. You correctly highlight the benefits in terms of freshness vs. performance, which shows thoughtful consideration of real-world scenarios. Clear and accurate—well done."
-                    },
-                    {
-                        "question": "How do you implement API routes in Next.js?",
-                        "feedback": "Your answer demonstrates a solid understanding of how API routes work in Next.js. You correctly mention the file structure and how routing is inferred. Highlighting the use of req and res, and comparing it to Express.js, helps clarify the concept. A strong and practical explanation suitable for a technical interview."
-                    }
-                ]
-            },
-            "LLM & AI System": {
-                "Embeddings": [
-                    {
-                        "question": "What is an embedding in the context of language models, and how is it typically generated?",
-                        "feedback": "This is a strong and technically accurate explanation. You clearly describe what an embedding is, how it’s generated using language models, and why it’s useful. Highlighting the role of embeddings in capturing semantic similarity and enabling various NLP tasks shows depth of understanding. To further strengthen your answer, you could briefly mention that embeddings are typically dense vectors (e.g., 768 or 1536 dimensions) and often normalized for similarity comparisons—but overall, this is a well-rounded and effective response."
-                    },
-                    {
-                        "question": "Why are vector similarity metrics like cosine similarity important when working with embeddings?",
-                        "feedback": "This is a strong technical explanation. You not only defined cosine similarity but also justified why it is preferred in the context of embeddings. Mentioning direction vs. magnitude and alternatives like Euclidean distance shows depth of understanding. Solid response for evaluating text similarity in NLP systems."
-                    },
-                    {
-                        "question": "What are some common use cases of text embeddings in modern AI systems?",
-                        "feedback": "This answer provides a well-rounded explanation of the most common and impactful uses of text embeddings in AI systems. You demonstrate a clear understanding of both high-level applications and low-level operational considerations, such as ANN search and performance tuning. Including specific techniques like chunking and filtering shows awareness of real-world scalability challenges. Overall, your response is technically accurate, comprehensive, and practical—well-suited for a technical interview."
-                    }
-                ],
-                "Retrieval-Augmented Generation (RAG)": [
-                    {
-                        "question": "What is Retrieval-Augmented Generation (RAG), and how does it enhance the capabilities of language models?",
-                        "feedback": "This shows surface-level understanding. A stronger answer would describe how RAG works: retrieving relevant documents from a knowledge base (via a retriever like a vector search), then feeding those documents as context into a generative model like GPT. Emphasize benefits like reduced hallucination and better factual grounding."
-                    },
-                    {
-                        "question": "What are the main components of a RAG pipeline, and how do they interact during inference?",
-                        "feedback": "This ignores key steps. The answer should involve converting documents to text, chunking, embedding the chunks, storing them in a vector database, then retrieving relevant chunks based on user queries before passing to the LLM. Highlighting these steps shows real understanding."
-                    },
-                    {
-                        "question": "How does using external knowledge in RAG mitigate hallucination in LLM outputs?",
-                        "feedback": "This lacks specificity. Evaluation should involve metrics like retrieval precision/recall, relevance ranking (e.g. NDCG), and answer quality (e.g. BLEU, ROUGE, human evals). Including these shows maturity in understanding system performance."
-                    }
-                ]
-            },
-            "Backend Engineering": {
-                "API Design": [
-                    {
-                        "question": "What are REST vs GraphQL tradeoffs for AI-based platforms?",
-                        "feedback": "Your answer effectively captures the fundamental difference between RESTful APIs and GraphQL, making it a strong response for an interview. You clearly explain that REST relies on multiple resource-specific endpoints with server-defined responses, which can result in over-fetching or under-fetching of data. In contrast, you correctly highlight that GraphQL uses a single endpoint and allows clients to request exactly the data they need, offering more flexibility and efficiency. To enhance your answer further, you could briefly mention that while GraphQL offers more control to the client, it can introduce added complexity on the server side due to schema management and resolver logic. Additionally, polishing the flow of your explanation slightly—such as using more formal connectors—can improve clarity and delivery. Overall, your response is accurate, concise, and well-suited for a technical interview."
-                    },
-                    {
-                        "question": "What are the principles of RESTful API",
-                        "feedback": "Your answer captures the core principles of RESTful API design accurately and concisely, making it a solid response in a technical interview context. You correctly explain statelessness, client-server separation, uniform interface and resource-based design. However, for a more complete and impressive answer, consider briefly mentioning cacheability, which is another key REST constraint. RESTful responses should be explicitly marked as cacheable or not to improve performance and reduce server load. You might also consider touching on layered system architecture, which allows intermediaries like proxies or load balancers to be included in the network for better scalability and security. Overall, your explanation is technically sound and well-structured. With minor additions, it would demonstrate a comprehensive grasp of REST principles."
-                    },
-                    {
-                        "question": "What are the most common approaches to versioning REST API?",
-                        "feedback": "Your answer is correct and demonstrates a solid understanding of the common REST API versioning strategies. However, to improve your response for an interview setting, I would encourage you to elaborate briefly on each method, even with just one line per approach. For example, you could mention that URI versioning (/api/v1/resource) is the most commonly used due to its simplicity and visibility, while header and media type versioning are more REST-compliant but add complexity. Including the pros and cons helps demonstrate not just knowledge of the options, but also awareness of when and why to use them."
-                    }
-                ],
-                "Serverless Architectures": [
-                    {
-                        "question": "What is serverless architecture, and how does it differ from traditional server-based models?",
-                        "feedback": "Your answer is correct and well-structured, especially for a concise interview response. To strengthen the answer further, consider briefly acknowledging one limitation—such as cold starts or vendor lock-in—to show a balanced understanding. But overall, your response is technically accurate"
-                    },
-                    {
-                        "question": "Name two popular serverless platforms and explain what they offer.",
-                        "feedback": "Your answer is accurate, concise, and clearly demonstrates understanding of the core capabilities of AWS Lambda and Google Cloud Functions. You correctly highlight that both platforms abstract server management, support automatic scaling, and use a pay-per-use billing model."
-                    },
-                    {
-                        "question": "Does serverless mean there are no servers involved?",
-                        "feedback": "Your answer is correct and clearly explains a common misconception about serverless architecture. You accurately point out that servers still exist in serverless computing, but the key difference is that developers are not responsible for managing them. Your explanation of server abstraction and cloud provider responsibility is well-stated and aligns with how modern serverless platforms operate. For an interview, this is a solid and confident response. If you want to enhance it slightly, you could briefly mention the benefits of this abstraction—such as faster deployment and improved focus on application logic—but overall, your answer demonstrates a strong understanding of the concept."
-                    }
-                ]
-            }
-        }
-
-        questions_list = question_map[category_name][subcategory_name]
+        questions_list = question_map[category_name][subcategory_name] if job_id == 42012811001 else question_map_2[category_name][subcategory_name]
         for question in questions_list: 
             new_question = Question(question_name=question["question"], subcategory_id=subcategory_id)
             db.add(new_question)
             db.flush()
             answer = Answer(
                 question_id=new_question.question_id,
-                answer="",
+                answer=question["answer"],
                 feedback=question["feedback"]
             )
             db.add(answer)
@@ -387,7 +304,7 @@ def get_existing_interview_session_info(db, user_id, subcategory_id):
     }
     """
     job_id = get_jobid_from_subcategory(db, subcategory_id)
-    if job_id == 42012811001:
+    if job_id == 42012811001 or job_id == 42012811002:
         subcategory_status = (
             db.query(Subcategory)
             .with_entities(Subcategory.status)
@@ -406,7 +323,7 @@ def get_existing_interview_session_info(db, user_id, subcategory_id):
             elif question.answer:
                 answer_list.append(question.answer.answer)
                 feedback_list.append(question.answer.feedback)
-
+        
         return {
             "questions": question_list,
             "answers": answer_list,
@@ -459,7 +376,7 @@ def get_user_questions(db, user_id, subcategory_id):
 
 def update_answer(db, user_id, subcategory_id, user_answer):
     job_id = get_jobid_from_subcategory(db, subcategory_id)
-    if job_id == 42012811001:        
+    if job_id == 42012811001 or job_id == 42012811002:        
         questions = get_user_questions(db, user_id, subcategory_id)
         
         answered_questions = 0
@@ -582,7 +499,7 @@ def generate_subcategory_summary(db, subcategory_id, user_id):
     }
     """
     job_id = get_jobid_from_subcategory(db, subcategory_id)
-    if job_id == 42012811001:
+    if job_id == 42012811001 or job_id == 42012811002:
         curr_summary = db.query(Subcategory).filter(Subcategory.subcategory_id == subcategory_id).first()
         if curr_summary and curr_summary.summary:
             return curr_summary.summary
@@ -662,7 +579,7 @@ def generate_mock_interview_summary(db, job_id, user_id):
     """
     return the summary of the mock interview
     """
-    if job_id == 42012811001:
+    if job_id == 42012811001 or job_id == 42012811002:
         curr_summary = db.query(MockInterview).filter(MockInterview.job_id == job_id, MockInterview.user_id == user_id).first()
         if curr_summary and curr_summary.summary:
             return {
@@ -671,8 +588,8 @@ def generate_mock_interview_summary(db, job_id, user_id):
         }
     
         time.sleep(7)
-        summary = "The candidate demonstrated a strong grasp of modern frontend and backend integration concepts, excelling in Next.js, API design, serverless architecture, and text embeddings. Their answers were technically accurate, well-articulated, and showcased awareness of both conceptual foundations and practical implementation. However, the candidate did not perform well in the TypeScript section, where they exhibited critical misunderstandings about fundamental concepts such as the difference between type and interface, and the purpose of generics. These gaps could affect maintainability and correctness in large-scale TypeScript codebases. Additionally, the candidate failed the Retrieval-Augmented Generation (RAG) portion, indicating a limited understanding of how language models leverage retrieval mechanisms, which is important for modern AI-integrated applications."
-        failed_topics = "Retrieval-Augmented Generation (RAG),Typescript"
+        summary = "Candidate has demonstrated strong technical understanding in SQL database, however candidate is lacking knowledge on the use case for NoSQL database. Therefore, candidate did not passed the interview." if job_id == 42012811001 else "Overall, the interview responses demonstrate a foundational understanding of key data science concepts, with strong answers in areas like feature selection, model comparison, and the use of Python libraries across the data pipeline. However, there are notable gaps in critical subcategories such as Data Preprocessing and Model Evaluation, where overly simplistic or incomplete approaches were given for handling missing values, outliers, and performance metrics like precision and recall. Additionally, while the candidate shows familiarity with SQL operations and visualization tools, certain responses lacked depth or clarity, suggesting room for growth in articulating and applying best practices. With more experience and focus on nuanced problem-solving strategies, the candidate has strong potential to strengthen their data science proficiency."
+        failed_topics = "Retrieval-Augmented Generation (RAG),Embeddings,Serverless Architectures" if job_id == 42012811001 else "Data Preprocessing, Model Evaluation"
         curr_summary.summary = summary
         curr_summary.failed_topics = failed_topics
         db.commit()
@@ -680,6 +597,7 @@ def generate_mock_interview_summary(db, job_id, user_id):
             "summary": summary,
             "failed_topics": failed_topics
         }
+        
     current_mock_interview = (
         db.query(MockInterview)
         .filter(MockInterview.job_id == job_id, MockInterview.user_id == user_id)

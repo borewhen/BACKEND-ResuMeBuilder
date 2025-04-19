@@ -6,6 +6,7 @@ import openai
 from app.service.job_service import get_company_name_and_job_position
 from sqlalchemy.orm import joinedload
 from sqlalchemy import desc
+from sqlalchemy.exc import IntegrityError
 
 LINKEDIN_SCRAPER_API_KEY=os.getenv("LINKEDIN_SCRAPER_API_KEY", "dummy_key")
 OPENAI_API_KEY=os.getenv("OPENAI_API_KEY", "dummy_key")
@@ -117,7 +118,13 @@ def create_mock_interview(db, job_id: int, user_id: int):
     job_detail = get_company_name_and_job_position(job_id)
     new_mock_interview = MockInterview(job_id=job_id, user_id=user_id, company_name=job_detail["company_name"], job_position=job_detail["job_position"])
     db.add(new_mock_interview)
-    db.flush()
+
+    try:
+        db.flush()
+    except IntegrityError:
+        db.rollback()
+        return create_mock_interview(db, job_id, user_id)
+
     return new_mock_interview, False
 
 

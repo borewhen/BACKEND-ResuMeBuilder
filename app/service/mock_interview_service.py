@@ -301,20 +301,15 @@ def get_existing_interview_session_info(db, user_id, subcategory_id):
         
         for question in questions:
             question_list.append(question.question_name)
-            
-            if question.answer:
+
+            if question.answer and not question.answer.answer:
+                break
+            elif question.answer:
                 answer_list.append(question.answer.answer)
                 feedback_list.append(question.answer.feedback)
 
-        question_count = 1
-        for answer in answer_list:
-            if answer != "":
-                question_count += 1
-        
-        
-        
         return {
-            "questions": question_list[:question_count],
+            "questions": question_list,
             "answers": answer_list,
             "feedbacks": feedback_list,
             "status": subcategory_status   

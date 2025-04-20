@@ -98,8 +98,8 @@ question_map = {
             {
                 "question": "Name two popular serverless platforms and explain what they offer.",
                 "answer": "",
-                "feedback": "Cold starts impact latency-sensitive applications. A better response could include pre-warming strategies, using provisioned concurrency (in AWS), minimizing dependencies, or offloading tasks to background workers."
-            },
+                "feedback": "The answer is too vague. While AWS and Google Cloud are cloud providers, they are not serverless platforms themselves — specific services like AWS Lambda and Google Cloud Functions should be mentioned. Additionally, you missed important details about what these services offer, such as event-driven execution, automatic scaling, and pay-per-use pricing."
+            }
         ]
     }
 }

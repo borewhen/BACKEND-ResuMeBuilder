@@ -4,7 +4,7 @@ question_map = {
             {
                 "question": "How does TypeScript improve code maintainability in large-scale applications?",
                 "answer": "",
-                "feedback": "Good understanding of the key benefits. For improvement, you could also mention how interfaces and contracts between components reduce integration errors."
+                "feedback": "Good understanding of the key benefits, mainly highlighting on static typing — and how it contributes to maintainability by catching errors early. To improve your answer, consider expanding slightly on how better tooling (like autocompletion, refactoring support, and IDE integration) enhances developer productivity, especially in collaborative environments."
             },
             {
                 "question": "What are the differences between interface and type in TypeScript?",
@@ -86,7 +86,7 @@ question_map = {
             {
                 "question": "What are the most common approaches to versioning REST API?",
                 "answer": "",
-                "feedback": "Accurate and complete. Well done!"
+                "feedback": "Accurate, well done! However, to improve your response for an interview setting, I would encourage you to elaborate briefly on each method, even with just one line per approach. For example, you could mention that URI versioning (/api/v1/resource) is the most commonly used due to its simplicity and visibility, while header and media type versioning are more REST-compliant but add complexity."
             }
         ],
         "Serverless Architectures": [
@@ -220,7 +220,7 @@ question_map_2 = {
 }
 
 feedback_map = {
-  'Typescript': 'he candidate shows a solid understanding of TypeScript fundamentals and demonstrates practical knowledge of generics. However, some answers could be enhanced by incorporating use cases and architectural benefits. You passed the interview',
+  'Typescript': 'The candidate shows a solid understanding of TypeScript fundamentals and demonstrates practical knowledge of generics. However, some answers could be enhanced by incorporating use cases and architectural benefits. You passed the interview',
   'Next.js': 'Responses are technically accurate and well-structured, covering SSR, SSG, and API routes. There is s a good grasp of data-fetching strategies, though some advanced concepts like ISR or SEO trade-offs were not covered. With minor improvements, you will be prepared for this topic.',
   'Embeddings': 'The answers are too vague or lack technical rigor. There is limited discussion of how embeddings function or are used at scale, and no real explanation of similarity metrics',
   'Retrieval-Augmented Generation (RAG)': ' Answers show only a surface-level understanding of RAG systems. Key concepts like chunking, vector search, and evaluation methods are missing or lightly touched.  Study end-to-end RAG pipelines — how data is chunked, embedded, retrieved, and passed to an LLM. Understand how RAG reduces hallucination and how to evaluate its performance. You did not pass this section and need to improve your knowledge significantly.',

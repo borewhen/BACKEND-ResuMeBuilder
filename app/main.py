@@ -23,12 +23,14 @@ origins = [
     "http://localhost:3000",
     "http://localhost:3001",
     "https://resume-ai-blush.vercel.app" #prod
+    "https://uhired-ai-blush.vercel.app" #prod
 ]
 
-# Add CORS middleware
+# Add CORS middleware, also allow Vercel preview URLs!
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
+    allow_origin_regex=r"^https:\/\/(resume|uhired)-.*\.vercel\.app$",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

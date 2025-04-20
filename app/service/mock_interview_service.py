@@ -7,7 +7,7 @@ from app.service.job_service import get_company_name_and_job_position
 from sqlalchemy.orm import joinedload
 from sqlalchemy import desc
 from sqlalchemy.exc import IntegrityError
-from app.service.mapping_service import question_map, question_map_2
+from app.service.mapping_service import question_map, question_map_2, feedback_map
 import time
 
 LINKEDIN_SCRAPER_API_KEY=os.getenv("LINKEDIN_SCRAPER_API_KEY", "dummy_key")
@@ -244,7 +244,9 @@ def initialize_subcategory_interview_session(db, subcategory_id, user_id):
             .scalar()
         )
         questions_list = question_map[category_name][subcategory_name] if job_id == 42012811001 else question_map_2[category_name][subcategory_name]
+        print(questions_list)
         for question in questions_list: 
+            print(question)
             new_question = Question(question_name=question["question"], subcategory_id=subcategory_id)
             db.add(new_question)
             db.flush()
@@ -505,7 +507,7 @@ def generate_subcategory_summary(db, subcategory_id, user_id):
             return curr_summary.summary
         
         time.sleep(3)
-        curr_summary.summary = "summary template"
+        curr_summary.summary = feedback_map[curr_summary.subcategory_name]
         db.commit()
         return curr_summary.summary
     
@@ -588,8 +590,8 @@ def generate_mock_interview_summary(db, job_id, user_id):
         }
     
         time.sleep(7)
-        summary = "Candidate has demonstrated strong technical understanding in SQL database, however candidate is lacking knowledge on the use case for NoSQL database. Therefore, candidate did not passed the interview." if job_id == 42012811001 else "Overall, the interview responses demonstrate a foundational understanding of key data science concepts, with strong answers in areas like feature selection, model comparison, and the use of Python libraries across the data pipeline. However, there are notable gaps in critical subcategories such as Data Preprocessing and Model Evaluation, where overly simplistic or incomplete approaches were given for handling missing values, outliers, and performance metrics like precision and recall. Additionally, while the candidate shows familiarity with SQL operations and visualization tools, certain responses lacked depth or clarity, suggesting room for growth in articulating and applying best practices. With more experience and focus on nuanced problem-solving strategies, the candidate has strong potential to strengthen their data science proficiency."
-        failed_topics = "Retrieval-Augmented Generation (RAG),Embeddings,Serverless Architectures" if job_id == 42012811001 else "Data Preprocessing, Model Evaluation"
+        summary = feedback_map['1'] if job_id == 42012811001 else feedback_map['2']
+        failed_topics = "Retrieval-Augmented Generation (RAG),Embeddings,Serverless Architectures" if job_id == 42012811001 else "SQL Databases, Python for Data Science"
         curr_summary.summary = summary
         curr_summary.failed_topics = failed_topics
         db.commit()

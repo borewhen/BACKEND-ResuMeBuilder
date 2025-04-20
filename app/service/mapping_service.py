@@ -100,7 +100,6 @@ question_map = {
                 "answer": "",
                 "feedback": "Cold starts impact latency-sensitive applications. A better response could include pre-warming strategies, using provisioned concurrency (in AWS), minimizing dependencies, or offloading tasks to background workers."
             },
-            p
         ]
     }
 }

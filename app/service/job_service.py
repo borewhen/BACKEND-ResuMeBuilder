@@ -29,7 +29,17 @@ def scrape_job_detail(job_id):
     job_id (int): this is unique identifier for job
     """
     try:
-        response = response = requests.get(
+        if job_id == 42012811001:
+            return [{
+                "job_position": "Full-Stack Developer",
+                "company_name": "Novo AI"
+            }]
+        if job_id == 42012811002:
+            return [{
+                "job_position": "Data Science Intern",
+                "company_name": "Infineon Technologies"
+            }]
+        response = requests.get(
             f"https://api.scrapingdog.com/linkedinjobs",
             params={"api_key": LINKEDIN_SCRAPER_API_KEY, "job_id": {job_id}},
         )
@@ -69,7 +79,9 @@ def format_desc(job_id):
                     {job_detail[0].get("job_description", "No description available.")}
                     ---
                     
-                    Ensure it includes proper HTML tags (such as <h1>, <p>, <ul>, <li> where needed), and format them under one <div> with class name of job-desc-container. Don't include escaped newlines (\n) and backslashes (\\)
+                    1. Ensure it includes proper HTML tags (such as <h1>, <p>, <ul>, <li> where needed), and format them under one <div> with class name of job-desc-container. Don't include escaped newlines (\n) and backslashes (\\)
+                    2. don't include description starting with headings such as "The Company" or "Description", just proceed with the content of the job description
+                    3. don't use any of h1, h2, h3. All sections (eg. about us, responsibiltiies, requirements) must be <p> tag with bold style
                     """
                 }
             ]
@@ -89,6 +101,18 @@ def get_company_name_and_job_position(job_id):
     """
     get company name and job position
     """
+    if job_id == 42012811001:
+        return {
+            "company_name": "Nova AI",
+            "job_position": "Full-Stack Developer"   
+        }
+    
+    if job_id == 42012811002:
+        return {
+            "company_name": "Infineon Technologies",
+            "job_position": "Data Science Intern"   
+        }
+        
     response = response = requests.get(
         f"https://api.scrapingdog.com/linkedinjobs",
         params={"api_key": LINKEDIN_SCRAPER_API_KEY, "job_id": {job_id}},
@@ -107,6 +131,11 @@ def get_company_logo_from_job_id(job_id):
     """
     get company logo
     """
+    if (job_id == 42012811001):
+        return "https://media.licdn.com/dms/image/v2/D560BAQHn4CmVqM4SyA/company-logo_200_200/company-logo_200_200/0/1712652396164/novoai_logo?e=1750291200&v=beta&t=fikhIzHChooHBUnwyrKT3HhvacufD430iBr_sO6qSyc"
+
+    if (job_id == 42012811002):
+        return "https://media.licdn.com/dms/image/v2/C4E0BAQG0dfCs_tMDUQ/company-logo_100_100/company-logo_100_100/0/1631307630627?e=1750291200&v=beta&t=VitC1mTf_E3FUkyEEpc30pnSkMHEDfaoAeyX_j_nTP4"
     response = response = requests.get(
         f"https://api.scrapingdog.com/linkedinjobs",
         params={"api_key": LINKEDIN_SCRAPER_API_KEY, "job_id": {job_id}},

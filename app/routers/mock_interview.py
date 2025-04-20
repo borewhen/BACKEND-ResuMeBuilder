@@ -44,7 +44,7 @@ def create_first_interview_question(
     db: Session = Depends(get_db),
     user: User = Depends(jwt_required)
 ): 
-    # creates first interview question
+    # creates first interview question 
     initialize_subcategory_interview_session(db, subcategory_id, user.user_id)
     return {"message": "interview session started"}
 

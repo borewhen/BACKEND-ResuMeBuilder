@@ -11,6 +11,7 @@ router = APIRouter()
 class SubmitAnswerRequest(BaseModel):
     user_id: int
     answer: str
+    summary: str
 
 class QuestionRequest(BaseModel):
     user_id: int
@@ -22,6 +23,7 @@ class InterviewItem(BaseModel):
 class Interview(BaseModel):
     questions: List[str]
     answers: List[str]
+    feedbacks: List[str]
 
 class FinishInterviewRequest(BaseModel):
     user_id: int
@@ -55,7 +57,7 @@ async def get_question(payload: QuestionRequest, db: Session = Depends(get_db)):
 @router.post("/submit-answer")
 async def submit_answer(payload: SubmitAnswerRequest, db: Session = Depends(get_db)):
     try:
-        handle_answer(user_id=payload.user_id, answer=payload.answer, db=db)
+        handle_answer(user_id=payload.user_id, answer=payload.answer, summary=payload.summary, db=db)
         return {"message": "Answer saved and next question generated."}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Answer submission failed: {str(e)}")

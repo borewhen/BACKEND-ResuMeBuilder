@@ -6,6 +6,9 @@ import openai
 from app.service.job_service import get_company_name_and_job_position
 from sqlalchemy.orm import joinedload
 from sqlalchemy import desc
+from sqlalchemy.exc import IntegrityError
+from app.service.mapping_service import question_map, question_map_2, feedback_map
+import time
 
 LINKEDIN_SCRAPER_API_KEY=os.getenv("LINKEDIN_SCRAPER_API_KEY", "dummy_key")
 OPENAI_API_KEY=os.getenv("OPENAI_API_KEY", "dummy_key")
@@ -17,6 +20,30 @@ def parse_skills_from_job(db, job_id, mock_interview_id):
     job_description (str)
     """
     try:
+        time.sleep(3)
+        if job_id == 42012811001:
+            categories = ["Frontend Engineering", "LLM & AI System", "Backend Engineering"]
+            category_map = insert_categories(db, mock_interview_id, categories)
+            sub = [Subcategory(category_id=category_map["Frontend Engineering"], subcategory_name="Typescript"),
+                   Subcategory(category_id=category_map["Frontend Engineering"], subcategory_name="Next.js"),
+                   Subcategory(category_id=category_map["LLM & AI System"], subcategory_name="Retrieval-Augmented Generation (RAG)"),
+                   Subcategory(category_id=category_map["LLM & AI System"], subcategory_name="Embeddings"),
+                   Subcategory(category_id=category_map["Backend Engineering"], subcategory_name="API Design"),
+                   Subcategory(category_id=category_map["Backend Engineering"], subcategory_name="Serverless Architectures")]
+            insert_subcategories(db, sub)
+            return
+        
+        if job_id == 42012811002:
+            categories = ["Data Analysis & Modelling", "Data Tools & Technologies"]
+            category_map = insert_categories(db, mock_interview_id, categories)
+            sub = [Subcategory(category_id=category_map["Data Analysis & Modelling"], subcategory_name="Data Preprocessing"),
+                   Subcategory(category_id=category_map["Data Analysis & Modelling"], subcategory_name="Feature Engineering"),
+                   Subcategory(category_id=category_map["Data Analysis & Modelling"], subcategory_name="Model Evaluation"),
+                   Subcategory(category_id=category_map["Data Tools & Technologies"], subcategory_name="SQL Databases"),
+                   Subcategory(category_id=category_map["Data Tools & Technologies"], subcategory_name="Visualization Tools"),
+                   Subcategory(category_id=category_map["Data Tools & Technologies"], subcategory_name="Python for Data Science")]
+            insert_subcategories(db, sub)
+            return
         response = response = requests.get(
             f"https://api.scrapingdog.com/linkedinjobs",
             params={"api_key": LINKEDIN_SCRAPER_API_KEY, "job_id": {job_id}},
@@ -117,7 +144,13 @@ def create_mock_interview(db, job_id: int, user_id: int):
     job_detail = get_company_name_and_job_position(job_id)
     new_mock_interview = MockInterview(job_id=job_id, user_id=user_id, company_name=job_detail["company_name"], job_position=job_detail["job_position"])
     db.add(new_mock_interview)
-    db.flush()
+
+    try:
+        db.flush()
+    except IntegrityError:
+        db.rollback()
+        return create_mock_interview(db, job_id, user_id)
+
     return new_mock_interview, False
 
 
@@ -174,11 +207,27 @@ def get_mock_interview_topics(db, job_id, user_id):
         })
     return res
 
+def get_jobid_from_subcategory(db, subcategory_id):
+    """
+    Get job_id from subcategory
+    db (Session): SQLAlchemy database session.
+    subcategories (list[Subcategories]): The list of subcategories.
+    """
+    job_id = (
+        db.query(MockInterview.job_id)
+        .join(Category, Category.mock_interview_id == MockInterview.mock_interview_id)
+        .join(Subcategory, Subcategory.category_id == Category.category_id)
+        .filter(Subcategory.subcategory_id == subcategory_id)
+        .scalar()
+    )
+    return job_id
 
 def initialize_subcategory_interview_session(db, subcategory_id, user_id):
     """
     creates a question for that subcategory if the subcategory for the user doesn't have any question yet.
     """
+    job_id = get_jobid_from_subcategory(db, subcategory_id)
+ 
     questions = get_user_questions(db, user_id, subcategory_id)
     subcategory_name = (
         db.query(Subcategory)
@@ -187,6 +236,31 @@ def initialize_subcategory_interview_session(db, subcategory_id, user_id):
         .scalar()
     )
 
+    if job_id == 42012811001 or job_id == 42012811002:
+        category_name = (
+            db.query(Category.category_name)
+            .join(Subcategory, Subcategory.category_id == Category.category_id)
+            .filter(Subcategory.subcategory_id == subcategory_id)
+            .scalar()
+        )
+        questions_list = question_map[category_name][subcategory_name] if job_id == 42012811001 else question_map_2[category_name][subcategory_name]
+        print(questions_list)
+        for question in questions_list: 
+            print(question)
+            new_question = Question(question_name=question["question"], subcategory_id=subcategory_id)
+            db.add(new_question)
+            db.flush()
+            answer = Answer(
+                question_id=new_question.question_id,
+                answer=question["answer"],
+                feedback=question["feedback"]
+            )
+            db.add(answer)
+            db.flush()
+            
+        db.commit()
+        return
+    
     if questions:
         raise HTTPException(status_code=400, detail=f"interview session for {subcategory_name} has been initialized")
 
@@ -231,6 +305,33 @@ def get_existing_interview_session_info(db, user_id, subcategory_id):
         "status": bool
     }
     """
+    job_id = get_jobid_from_subcategory(db, subcategory_id)
+    if job_id == 42012811001 or job_id == 42012811002:
+        subcategory_status = (
+            db.query(Subcategory)
+            .with_entities(Subcategory.status)
+            .filter(Subcategory.subcategory_id == subcategory_id)
+            .scalar()
+        )
+        questions = get_user_questions(db, user_id, subcategory_id)
+        question_list = []
+        answer_list = []
+        feedback_list = []
+        
+        for question in questions:
+            question_list.append(question.question_name)
+            if question.answer and not question.answer.answer:
+                break
+            elif question.answer:
+                answer_list.append(question.answer.answer)
+                feedback_list.append(question.answer.feedback)
+        
+        return {
+            "questions": question_list,
+            "answers": answer_list,
+            "feedbacks": feedback_list,
+            "status": subcategory_status   
+        }
     subcategory_status = (
         db.query(Subcategory)
         .with_entities(Subcategory.status)
@@ -248,7 +349,7 @@ def get_existing_interview_session_info(db, user_id, subcategory_id):
         if question.answer:
             answer_list.append(question.answer.answer)
             feedback_list.append(question.answer.feedback)
-
+        
     return {
         "questions": question_list,
         "answers": answer_list,
@@ -269,12 +370,33 @@ def get_user_questions(db, user_id, subcategory_id):
         .join(Category, Subcategory.category_id == Category.category_id)
         .join(MockInterview, Category.mock_interview_id == MockInterview.mock_interview_id)
         .filter(MockInterview.user_id == user_id, Subcategory.subcategory_id == subcategory_id)
+        .order_by(Question.question_id.asc())
         .all()
     )
     return questions
 
 
 def update_answer(db, user_id, subcategory_id, user_answer):
+    job_id = get_jobid_from_subcategory(db, subcategory_id)
+    if job_id == 42012811001 or job_id == 42012811002:        
+        questions = get_user_questions(db, user_id, subcategory_id)
+        
+        answered_questions = 0
+        for question in questions:
+            answered_questions += 1
+            if question.answer and not question.answer.answer:
+                question.answer.answer = user_answer
+                db.commit()
+                break
+        
+        if answered_questions == 3:
+            subcategory = db.query(Subcategory).filter(Subcategory.subcategory_id == subcategory_id).first()
+            if subcategory:
+                subcategory.status = False
+                db.commit()
+        return
+        
+        
     latest_question = (
         db.query(Question)
         .join(Subcategory, Question.subcategory_id == Subcategory.subcategory_id)
@@ -378,6 +500,17 @@ def generate_subcategory_summary(db, subcategory_id, user_id):
         summary: str
     }
     """
+    job_id = get_jobid_from_subcategory(db, subcategory_id)
+    if job_id == 42012811001 or job_id == 42012811002:
+        curr_summary = db.query(Subcategory).filter(Subcategory.subcategory_id == subcategory_id).first()
+        if curr_summary and curr_summary.summary:
+            return curr_summary.summary
+        
+        time.sleep(3)
+        curr_summary.summary = feedback_map[curr_summary.subcategory_name]
+        db.commit()
+        return curr_summary.summary
+    
     subcategory_status = (
         db.query(Subcategory)
         .with_entities(Subcategory.status)
@@ -448,6 +581,25 @@ def generate_mock_interview_summary(db, job_id, user_id):
     """
     return the summary of the mock interview
     """
+    if job_id == 42012811001 or job_id == 42012811002:
+        curr_summary = db.query(MockInterview).filter(MockInterview.job_id == job_id, MockInterview.user_id == user_id).first()
+        if curr_summary and curr_summary.summary:
+            return {
+            "summary": curr_summary.summary,
+            "failed_topics": curr_summary.failed_topics
+        }
+    
+        time.sleep(7)
+        summary = feedback_map['1'] if job_id == 42012811001 else feedback_map['2']
+        failed_topics = "Retrieval-Augmented Generation (RAG),Embeddings,Serverless Architectures" if job_id == 42012811001 else "SQL Databases, Python for Data Science"
+        curr_summary.summary = summary
+        curr_summary.failed_topics = failed_topics
+        db.commit()
+        return {
+            "summary": summary,
+            "failed_topics": failed_topics
+        }
+        
     current_mock_interview = (
         db.query(MockInterview)
         .filter(MockInterview.job_id == job_id, MockInterview.user_id == user_id)

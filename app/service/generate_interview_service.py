@@ -121,10 +121,13 @@ def handle_answer(user_id: int, answer: str, summary: str, db: Session) -> None:
 
     Resume: {json.dumps(resume_json)}
 
-    Provided that the summary of interview: {summary}. Please give a feedback on the user's answer in 40 words or less. Also be specific on the topic on which is lacking (only case if the interview summary is lacking)
+    - Provided that the summary of interview: {summary}.
+    - Please give a feedback on the user's answer in 50 words or less, if it's a negative feedback provide insight on relevance of user's answer and correctness as well as providing examples to answer it well
+    - If its a positive feedback, also mention on what can be improved on as well
+    - Directly give feedback without explicitly indicating "Positive Feedback:" or "Negative Feedback"
     """
     response = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",
+        model="gpt-4o",
         messages=[{"role": "system", "content": prompt}],
         max_tokens=300,
         temperature=0.7
@@ -154,7 +157,7 @@ def handle_answer(user_id: int, answer: str, summary: str, db: Session) -> None:
     Return ONLY the next question text.
     """
     response = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",
+        model="gpt-4o",
         messages=[{"role": "system", "content": prompt}],
         max_tokens=300,
         temperature=0.7

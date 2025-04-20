@@ -14,7 +14,7 @@ question_map = {
             {
                 "question": "Explain generics in TypeScript and give a practical use case.",
                 "answer": "",
-                "feedback": "Excellent! This showed both conceptual and practical understanding."
+                "feedback": "Excellent! This showed both conceptual and practical understanding. To enhance your answer further, you could specify that generics also apply to interfaces, classes, and types, not just functions."
             }
         ],
         "Next.js": [

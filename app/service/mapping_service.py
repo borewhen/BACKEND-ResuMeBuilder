@@ -9,7 +9,7 @@ question_map = {
             {
                 "question": "What are the differences between interface and type in TypeScript?",
                 "answer": "",
-                "feedback": "Good. You covered the basic technical differences clearly. Could be stronger by giving a use-case of when to prefer one over the other."
+                "feedback": "Good. You covered the basic technical differences clearly, especially highlighting declaration merging (a common point of confusion) and the flexibility of type aliases for more complex expressions. However, it could be improved by giving a use-case of when to prefer one over the other."
             },
             {
                 "question": "Explain generics in TypeScript and give a practical use case.",
@@ -100,11 +100,7 @@ question_map = {
                 "answer": "",
                 "feedback": "Cold starts impact latency-sensitive applications. A better response could include pre-warming strategies, using provisioned concurrency (in AWS), minimizing dependencies, or offloading tasks to background workers."
             },
-            {
-                "question": "Does serverless mean there are no servers involved?",
-                "answer": "",
-                "feedback": "Honest, but unhelpful. Even if unfamiliar, you can still describe hypothetical usage (e.g., triggering Lambda via S3 upload to process PDFs) to show conceptual understanding."
-            }
+            p
         ]
     }
 }

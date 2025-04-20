@@ -81,18 +81,21 @@ def get_interview_data(user_id: int, db: Session):
     
     questions = []
     answers = []
+    feedback = []
     
     for data in datas:
         questions.append(data.question)
         if data.answer is not None:
             answers.append(data.answer)
+            feedback.append(data.feedback)
     
     return {
         "questions": questions,
-        "answers": answers
+        "answers": answers,
+        "feedbacks": feedback
     }
 
-def handle_answer(user_id: int, answer: str, db: Session) -> None:
+def handle_answer(user_id: int, answer: str, summary: str, db: Session) -> None:
     # Get the most recent unanswered question
     prev_q = db.query(VideoInterviewQuestion)\
         .filter_by(user_id=user_id, answer=None)\
@@ -103,11 +106,35 @@ def handle_answer(user_id: int, answer: str, db: Session) -> None:
         raise ValueError("No active question found.")
 
     prev_q.answer = answer
-    db.commit()
+    db.flush()
 
     # Resume data
     resume_data = db.query(UsersResume).filter_by(user_id=user_id).first()
     resume_json = resume_data.resume_extracted if resume_data else {}
+
+    # Generate feedback
+    prompt = f"""
+    You are conducting an AI interview.
+
+    Previous question: {prev_q.question}
+    Candidate's answer: {answer}
+
+    Resume: {json.dumps(resume_json)}
+
+    - Provided that the summary of interview: {summary}.
+    - Please give a feedback on the user's answer in 50 words or less, if it's a negative feedback provide insight on relevance of user's answer and correctness as well as providing examples to answer it well
+    - If its a positive feedback, also mention on what can be improved on as well
+    - Directly give feedback without explicitly indicating "Positive Feedback:" or "Negative Feedback"
+    """
+    response = openai.ChatCompletion.create(
+        model="gpt-4o",
+        messages=[{"role": "system", "content": prompt}],
+        max_tokens=300,
+        temperature=0.7
+    )
+    feedback = response["choices"][0]["message"]["content"].strip()
+    prev_q.feedback = feedback
+    db.flush()
 
     # Generate next/follow-up question
     prompt = f"""
@@ -130,7 +157,7 @@ def handle_answer(user_id: int, answer: str, db: Session) -> None:
     Return ONLY the next question text.
     """
     response = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",
+        model="gpt-4o",
         messages=[{"role": "system", "content": prompt}],
         max_tokens=300,
         temperature=0.7
@@ -159,12 +186,14 @@ def generate_video_interview_summary(payload, db):
     # 1. generate technical answer summary feedback
     questions = payload.interview.questions
     answers = payload.interview.answers
+    feedbacks = payload.interview.feedbacks
     prompt = ""
 
     for i in range(len(questions) if len(questions) == 1 else len(answers)):
         prompt += f"""
-            Q{i+1}. {questions[i]}
-            A{i+1}. {answers[i] if i < len(answers) else "No answer provided"}
+            Question{i+1}. {questions[i]}
+            Answer{i+1}. {answers[i] if i < len(answers) else "No answer provided"}
+            Feedback{i+1} {feedbacks[i] if i < len(answers) else "No answer provided"}
         """
     
     completion = openai.ChatCompletion.create(
